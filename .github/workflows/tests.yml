@@ -15,7 +15,7 @@ jobs:
         uses: actions/setup-node@v1.2.0
         with:
           node-version: 12.x
-      - name: Install Google Cloud SDK
+      - name: Install Sentry CLI
         run: node dist/index.js
         env:
           INPUT_VERSION: ${{ matrix.version }}

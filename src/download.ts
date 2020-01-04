@@ -1,6 +1,8 @@
 import * as core from '@actions/core';
+import * as io from '@actions/io';
 import * as tc from '@actions/tool-cache';
-import { renameSync } from 'fs';
+import { existsSync, renameSync } from 'fs';
+import { resolve } from 'path';
 import { Input } from './utils/input';
 
 export class Download {
@@ -33,16 +35,24 @@ export class Download {
 
     core.debug(`Download path: ${downloadPath}`);
 
+    const home = process.env.HOME ?? '/';
+    const binDir = resolve(home, 'tools', 'sentry-cli', 'bin');
+
+    if (!existsSync(binDir)) {
+      await io.mkdirP(binDir);
+    }
+
     switch (process.platform) {
       case 'linux':
       case 'darwin':
-        destinationPath = '/usr/local/bin/sentry-cli';
+        destinationPath = resolve(binDir, 'sentry-cli');
         break;
       default:
         throw new Error(`Unsupported platform: ${process.platform}`);
     }
 
-    core.debug(`Destination path: ${destinationPath}`);
+    await io.mv(downloadPath, destinationPath);
+    core.addPath(binDir);
 
     renameSync(downloadPath, destinationPath);
   }

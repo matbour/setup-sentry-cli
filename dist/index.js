@@ -4549,11 +4549,17 @@ __webpack_require__.r(__webpack_exports__);
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __webpack_require__(470);
 
+// EXTERNAL MODULE: ./node_modules/@actions/io/lib/io.js
+var io = __webpack_require__(1);
+
 // EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
 var tool_cache = __webpack_require__(533);
 
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __webpack_require__(747);
+
+// EXTERNAL MODULE: external "path"
+var external_path_ = __webpack_require__(622);
 
 // CONCATENATED MODULE: ./src/utils/input.ts
 
@@ -4592,6 +4598,8 @@ class input_Input {
 
 
 
+
+
 class download_Download {
     /**
      * Get the sentry-cli download URL, based on the current platform and input version.
@@ -4615,18 +4623,25 @@ class download_Download {
      * Download the sentry-cli and move it the to standard binaries directory.
      */
     static async download() {
+        var _a;
         const downloadPath = await Object(tool_cache.downloadTool)(download_Download.getSentryLink());
         let destinationPath;
         Object(core.debug)(`Download path: ${downloadPath}`);
+        const home = (_a = process.env.HOME, (_a !== null && _a !== void 0 ? _a : '/'));
+        const binDir = Object(external_path_.resolve)(home, 'tools', 'sentry-cli', 'bin');
+        if (!Object(external_fs_.existsSync)(binDir)) {
+            await Object(io.mkdirP)(binDir);
+        }
         switch (process.platform) {
             case 'linux':
             case 'darwin':
-                destinationPath = '/usr/local/bin/sentry-cli';
+                destinationPath = Object(external_path_.resolve)(binDir, 'sentry-cli');
                 break;
             default:
                 throw new Error(`Unsupported platform: ${process.platform}`);
         }
-        Object(core.debug)(`Destination path: ${destinationPath}`);
+        await Object(io.mv)(downloadPath, destinationPath);
+        Object(core.addPath)(binDir);
         Object(external_fs_.renameSync)(downloadPath, destinationPath);
     }
 }
