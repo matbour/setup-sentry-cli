@@ -34,7 +34,7 @@ module.exports =
 /******/ 	// the startup function
 /******/ 	function startup() {
 /******/ 		// Load entry module and return exports
-/******/ 		return __webpack_require__(776);
+/******/ 		return __webpack_require__(700);
 /******/ 	};
 /******/ 	// initialize runtime
 /******/ 	runtime(__webpack_require__);
@@ -4113,6 +4113,158 @@ function isUnixExecutable(stats) {
 
 /***/ }),
 
+/***/ 700:
+/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __webpack_require__(470);
+
+// CONCATENATED MODULE: ./src/utils/input.ts
+
+class input_Input {
+    /**
+     * Check whether the given input exists and is not empty.
+     * @param name
+     */
+    static has(name) {
+        const actual = Object(core.getInput)(name);
+        return actual !== '';
+    }
+    /**
+     * Get the action input.
+     * @param name
+     * @param defaultV
+     */
+    static get(name, defaultV = '') {
+        return input_Input.has(name) ? Object(core.getInput)(name) : defaultV;
+    }
+    /**
+     * Execute a callback when the given input exists and is not empty.
+     * @param name
+     * @param callback
+     */
+    static whenHas(name, callback) {
+        if (!input_Input.has(name)) {
+            return;
+        }
+        callback(input_Input.get(name));
+    }
+}
+
+// CONCATENATED MODULE: ./src/config.ts
+
+
+class config_Config {
+    /**
+     * Setup the environment variables from the action inputs.
+     * @link https://docs.sentry.io/cli/configuration/#configuration-values
+     */
+    static setupEnvironmentVariables() {
+        // Set the Sentry URL
+        input_Input.whenHas('url', url => {
+            Object(core.exportVariable)('SENTRY_URL', url);
+        });
+        // Authenticate to the Sentry server
+        input_Input.whenHas('name', token => {
+            Object(core.setSecret)(token);
+            Object(core.exportVariable)('SENTRY_AUTH_TOKEN', token);
+        });
+        // Set the default organization
+        input_Input.whenHas('organization', organization => {
+            Object(core.exportVariable)('SENTRY_ORG', organization);
+        });
+        // Set the default project
+        input_Input.whenHas('project', project => {
+            Object(core.exportVariable)('SENTRY_PROJECT', project);
+        });
+    }
+}
+
+// EXTERNAL MODULE: ./node_modules/@actions/io/lib/io.js
+var io = __webpack_require__(1);
+
+// EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
+var tool_cache = __webpack_require__(533);
+
+// EXTERNAL MODULE: external "fs"
+var external_fs_ = __webpack_require__(747);
+
+// EXTERNAL MODULE: external "path"
+var external_path_ = __webpack_require__(622);
+
+// CONCATENATED MODULE: ./src/download.ts
+
+
+
+
+
+
+class download_Download {
+    /**
+     * Get the sentry-cli download URL, based on the current platform and input version.
+     */
+    static getSentryLink() {
+        const version = input_Input.get('version', 'latest');
+        Object(core.info)(`Detected platform: ${process.platform}`);
+        Object(core.info)(`Downloading sentry-cli version ${version}`);
+        switch (process.platform) {
+            case 'linux':
+                return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
+            case 'darwin':
+                return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
+            // case 'win32':
+            //   return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
+            default:
+                throw new Error(`Unsupported platform: ${process.platform}`);
+        }
+    }
+    /**
+     * Download the sentry-cli and move it the to standard binaries directory.
+     */
+    static async download() {
+        var _a;
+        const downloadPath = await Object(tool_cache.downloadTool)(download_Download.getSentryLink());
+        let destinationPath;
+        Object(core.debug)(`Download path: ${downloadPath}`);
+        const home = (_a = process.env.HOME, (_a !== null && _a !== void 0 ? _a : '/'));
+        const binDir = Object(external_path_.resolve)(home, 'tools', 'sentry-cli', 'bin');
+        if (!Object(external_fs_.existsSync)(binDir)) {
+            await Object(io.mkdirP)(binDir);
+        }
+        switch (process.platform) {
+            case 'linux':
+            case 'darwin':
+                destinationPath = Object(external_path_.resolve)(binDir, 'sentry-cli');
+                break;
+            default:
+                throw new Error(`Unsupported platform: ${process.platform}`);
+        }
+        await Object(io.mv)(downloadPath, destinationPath);
+        Object(core.info)(`sentry-cli executable has bin installed in ${destinationPath}`);
+        Object(core.addPath)(binDir);
+    }
+}
+
+// CONCATENATED MODULE: ./src/index.ts
+
+
+
+(async () => {
+    try {
+        await download_Download.download();
+        config_Config.setupEnvironmentVariables();
+    }
+    catch (e) {
+        Object(core.setFailed)(e);
+    }
+})();
+
+
+/***/ }),
+
 /***/ 722:
 /***/ (function(module) {
 
@@ -4537,152 +4689,6 @@ module.exports = function (str, opts) {
 /***/ (function(module) {
 
 module.exports = require("zlib");
-
-/***/ }),
-
-/***/ 776:
-/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-
-// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
-var core = __webpack_require__(470);
-
-// EXTERNAL MODULE: ./node_modules/@actions/io/lib/io.js
-var io = __webpack_require__(1);
-
-// EXTERNAL MODULE: ./node_modules/@actions/tool-cache/lib/tool-cache.js
-var tool_cache = __webpack_require__(533);
-
-// EXTERNAL MODULE: external "fs"
-var external_fs_ = __webpack_require__(747);
-
-// EXTERNAL MODULE: external "path"
-var external_path_ = __webpack_require__(622);
-
-// CONCATENATED MODULE: ./src/utils/input.ts
-
-class input_Input {
-    /**
-     * Check whether the given input exists and is not empty.
-     * @param name
-     */
-    static has(name) {
-        const actual = Object(core.getInput)(name);
-        return actual !== '';
-    }
-    /**
-     * Get the action input.
-     * @param name
-     * @param defaultV
-     */
-    static get(name, defaultV = '') {
-        return input_Input.has(name) ? Object(core.getInput)(name) : defaultV;
-    }
-    /**
-     * Execute a callback when the given input exists and is not empty.
-     * @param name
-     * @param callback
-     */
-    static whenHas(name, callback) {
-        if (!input_Input.has(name)) {
-            return;
-        }
-        callback(input_Input.get(name));
-    }
-}
-
-// CONCATENATED MODULE: ./src/download.ts
-
-
-
-
-
-
-class download_Download {
-    /**
-     * Get the sentry-cli download URL, based on the current platform and input version.
-     */
-    static getSentryLink() {
-        const version = input_Input.get('version', 'latest');
-        Object(core.info)(`Detected platform: ${process.platform}`);
-        Object(core.info)(`Downloading sentry-cli version ${version}`);
-        switch (process.platform) {
-            case 'linux':
-                return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
-            case 'darwin':
-                return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
-            // case 'win32':
-            //   return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
-            default:
-                throw new Error(`Unsupported platform: ${process.platform}`);
-        }
-    }
-    /**
-     * Download the sentry-cli and move it the to standard binaries directory.
-     */
-    static async download() {
-        var _a;
-        const downloadPath = await Object(tool_cache.downloadTool)(download_Download.getSentryLink());
-        let destinationPath;
-        Object(core.debug)(`Download path: ${downloadPath}`);
-        const home = (_a = process.env.HOME, (_a !== null && _a !== void 0 ? _a : '/'));
-        const binDir = Object(external_path_.resolve)(home, 'tools', 'sentry-cli', 'bin');
-        if (!Object(external_fs_.existsSync)(binDir)) {
-            await Object(io.mkdirP)(binDir);
-        }
-        switch (process.platform) {
-            case 'linux':
-            case 'darwin':
-                destinationPath = Object(external_path_.resolve)(binDir, 'sentry-cli');
-                break;
-            default:
-                throw new Error(`Unsupported platform: ${process.platform}`);
-        }
-        await Object(io.mv)(downloadPath, destinationPath);
-        Object(core.addPath)(binDir);
-        Object(external_fs_.renameSync)(downloadPath, destinationPath);
-    }
-}
-
-// CONCATENATED MODULE: ./src/config.ts
-
-
-class config_Config {
-    /**
-     * Setup the environment variables from the action inputs.
-     * @link https://docs.sentry.io/cli/configuration/#configuration-values
-     */
-    static setupEnvironmentVariables() {
-        // Set the Sentry URL
-        input_Input.whenHas('url', url => {
-            Object(core.exportVariable)('SENTRY_URL', url);
-        });
-        // Authenticate to the Sentry server
-        input_Input.whenHas('name', token => {
-            Object(core.setSecret)(token);
-            Object(core.exportVariable)('SENTRY_AUTH_TOKEN', token);
-        });
-        // Set the default organization
-        input_Input.whenHas('organization', organization => {
-            Object(core.exportVariable)('SENTRY_ORG', organization);
-        });
-        // Set the default project
-        input_Input.whenHas('project', project => {
-            Object(core.exportVariable)('SENTRY_PROJECT', project);
-        });
-    }
-}
-
-// CONCATENATED MODULE: ./src/index.ts
-
-
-(async () => {
-    await download_Download.download();
-    config_Config.setupEnvironmentVariables();
-})();
-
 
 /***/ }),
 
