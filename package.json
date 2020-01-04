@@ -20,5 +20,8 @@
     "@zeit/ncc": "^0.21.0",
     "ts-node": "^8.5.4",
     "typescript": "^3.7.4"
+  },
+  "devDependencies": {
+    "husky": "^3.1.0"
   }
 }
