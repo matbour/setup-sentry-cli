@@ -1,0 +1,29 @@
+name: Tests
+on: push
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        version: [latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v1
+      - name: Setup Node.js 12
+        uses: actions/setup-node@v1.2.0
+        with:
+          node-version: 12.x
+      - name: Install Google Cloud SDK
+        run: node dist/index.js
+        env:
+          INPUT_VERSION: ${{ matrix.version }}
+          INPUT_URL: ${{ secrets.SENTRY_URL }}
+          INPUT_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          INPUT_ORGANIZATION: ${{ secrets.SENTRY_ORGANIZATION }}
+          INPUT_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      - name: Send test event
+        run: |
+          export SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          sentry-cli send-event -m "Hello from GitHub Actions"
