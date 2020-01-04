@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as io from '@actions/io';
 import * as tc from '@actions/tool-cache';
-import { existsSync, renameSync } from 'fs';
+import { existsSync } from 'fs';
 import { resolve } from 'path';
 import { Input } from './utils/input';
 
@@ -52,8 +52,8 @@ export class Download {
     }
 
     await io.mv(downloadPath, destinationPath);
-    core.addPath(binDir);
 
-    renameSync(downloadPath, destinationPath);
+    core.info(`sentry-cli executable has bin installed in ${destinationPath}`);
+    core.addPath(binDir);
   }
 }
