@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "run": "ts-node ./src/index.ts",
-    "build": "ncc build ./src/index.ts -o dist -m -s --no-source-map-register"
+    "build": "ncc build ./src/index.ts -o dist -m -s --no-source-map-register && node sourcemap.js"
   },
   "keywords": [],
   "author": {
