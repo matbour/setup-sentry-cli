@@ -23,7 +23,18 @@ jobs:
           INPUT_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           INPUT_ORGANIZATION: ${{ secrets.SENTRY_ORGANIZATION }}
           INPUT_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      - name: Display Sentry CLI info
+        run: sentry-cli info
       - name: Send test event
         run: |
           export SENTRY_DSN=${{ secrets.SENTRY_DSN }}
           sentry-cli send-event -m "Hello from GitHub Actions"
+      - name: Make release
+        run: |
+          VERSION=`sentry-cli releases propose-version`
+          sentry-cli releases new "$VERSION"
+          sentry-cli releases set-commits "$VERSION" --auto
+          sentry-cli releases files "$VERSION" upload-sourcemaps ./dist
+          sentry-cli releases finalize "$VERSION"
+
+

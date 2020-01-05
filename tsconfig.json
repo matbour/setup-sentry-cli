@@ -9,6 +9,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "esModuleInterop": true,
+    "sourceMap": true,
+    "removeComments": true,
     "typeRoots": [
       "node_modules/@types"
     ]
