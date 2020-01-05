@@ -1,6 +1,9 @@
 name: Setup Sentry CLI
 description: Setup the Sentry CLI
 author: Mathrix Education SA
+branding:
+  color: orange
+  icon: triangle
 runs:
   using: 'node12'
   main: 'dist/index.js'
