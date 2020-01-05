@@ -4183,6 +4183,9 @@ class config_Config {
     }
 }
 
+// EXTERNAL MODULE: ./node_modules/@actions/exec/lib/exec.js
+var exec = __webpack_require__(986);
+
 // EXTERNAL MODULE: ./node_modules/@actions/io/lib/io.js
 var io = __webpack_require__(1);
 
@@ -4196,6 +4199,7 @@ var external_fs_ = __webpack_require__(747);
 var external_path_ = __webpack_require__(622);
 
 // CONCATENATED MODULE: ./src/download.ts
+
 
 
 
@@ -4238,6 +4242,7 @@ class download_Download {
             case 'linux':
             case 'darwin':
                 destinationPath = Object(external_path_.resolve)(binDir, 'sentry-cli');
+                await Object(exec.exec)('chmod', ['+x', destinationPath]);
                 break;
             default:
                 throw new Error(`Unsupported platform: ${process.platform}`);

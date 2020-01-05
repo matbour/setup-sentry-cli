@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import * as exec from '@actions/exec';
 import * as io from '@actions/io';
 import * as tc from '@actions/tool-cache';
 import { existsSync } from 'fs';
@@ -46,6 +47,7 @@ export class Download {
       case 'linux':
       case 'darwin':
         destinationPath = resolve(binDir, 'sentry-cli');
+        await exec.exec('chmod', ['+x', destinationPath]);
         break;
       default:
         throw new Error(`Unsupported platform: ${process.platform}`);
