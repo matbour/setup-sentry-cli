@@ -47,7 +47,7 @@ export class Download {
       case 'linux':
       case 'darwin':
         destinationPath = resolve(binDir, 'sentry-cli');
-        await exec.exec('chmod', ['+x', destinationPath]);
+        await exec.exec('chmod', ['+x', downloadPath]);
         break;
       default:
         throw new Error(`Unsupported platform: ${process.platform}`);

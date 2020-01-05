@@ -4242,7 +4242,7 @@ class download_Download {
             case 'linux':
             case 'darwin':
                 destinationPath = Object(external_path_.resolve)(binDir, 'sentry-cli');
-                await Object(exec.exec)('chmod', ['+x', destinationPath]);
+                await Object(exec.exec)('chmod', ['+x', downloadPath]);
                 break;
             default:
                 throw new Error(`Unsupported platform: ${process.platform}`);
