@@ -1,0 +1,26 @@
+name: Setup Sentry CLI
+description: Setup the Sentry CLI
+author: Mathrix Education SA
+branding:
+  color: orange
+  icon: triangle
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
+inputs:
+  version:
+    description: Sentry CLI version to use. By default, the action will use the latest one.
+    required: false
+    default: latest
+  token:
+    description: Authentication token to use. If not provided, you will have to authenticate yourself later.
+    required: false
+  url:
+    description: Sentry server URL. By default, sentry-cli will use https://sentry.io.
+    required: false
+  organization:
+    description: Default Sentry organization.
+    required: false
+  project:
+    description: Default Sentry project.
+    required: false

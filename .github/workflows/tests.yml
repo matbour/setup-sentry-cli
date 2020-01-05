@@ -1,0 +1,48 @@
+name: Tests
+on: push
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        version: [latest, 1.49.0]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v1
+      - name: Setup Node.js 12
+        uses: actions/setup-node@v1.2.0
+        with:
+          node-version: 12.x
+      - name: Install Sentry CLI
+        run: node dist/index.js
+        env:
+          INPUT_VERSION: ${{ matrix.version }}
+          INPUT_URL: ${{ secrets.SENTRY_URL }}
+          INPUT_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          INPUT_ORGANIZATION: ${{ secrets.SENTRY_ORGANIZATION }}
+          INPUT_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      - name: Display Sentry CLI info
+        run: |
+          sentry-cli --help
+          sentry-cli info
+      - name: Make release
+        if: contains(matrix.os, 'ubuntu') && matrix.version == 'latest'  # do not duplicate releases
+        run: |
+          VERSION=`sentry-cli releases propose-version`
+          sentry-cli releases new "$VERSION"
+          sentry-cli releases set-commits "$VERSION" --auto
+          sentry-cli releases files "$VERSION" upload-sourcemaps ./dist \
+            --rewrite \
+            --ext map \
+            --validate \
+            --verbose \
+            --strip-common-prefix
+          sentry-cli releases finalize "$VERSION"
+      - name: Send test event
+        if: contains(matrix.os, 'ubuntu') && matrix.version == 'latest'  # do not duplicate events
+        run: |
+          export SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          sentry-cli send-event -m "Hello from GitHub Actions"
+

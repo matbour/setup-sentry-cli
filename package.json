@@ -1,0 +1,47 @@
+{
+  "name": "@mathrix-education/setup-sentry-cli",
+  "version": "0.1.0",
+  "description": "Install the Sentry CLI in your GitHub Actions workflow.",
+  "keywords": [
+    "github-actions",
+    "actions",
+    "sentry",
+    "sentry-cli",
+    "sentry-release"
+  ],
+  "homepage": "https://github.com/mathrix-education/setup-sentry-cli",
+  "bugs": {
+    "url": "https://github.com/mathrix-education/setup-sentry-cli/issues",
+    "email": "mathieu@mathrix.fr"
+  },
+  "license": "MIT",
+  "main": "dist/index.js",
+  "author": {
+    "name": "Mathieu Bour",
+    "email": "mathieu@mathrix.fr"
+  },
+  "browser": false,
+  "repository": "github:mathrix-education/setup-sentry-cli",
+  "scripts": {
+    "build": "ncc build ./src/index.ts -o dist -m -s --no-source-map-register && node sourcemap.js"
+  },
+  "dependencies": {
+    "@actions/core": "^1.2.0",
+    "@actions/exec": "^1.0.2",
+    "@actions/io": "^1.0.1",
+    "@actions/tool-cache": "^1.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^13.1.4",
+    "@zeit/ncc": "^0.21.0",
+    "husky": "^3.1.0",
+    "ts-node": "^8.5.4",
+    "typescript": "^3.7.4"
+  },
+  "os": [
+    "linux",
+    "darwin",
+    "win32"
+  ],
+  "private": true
+}
