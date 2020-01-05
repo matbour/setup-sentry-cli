@@ -12,13 +12,16 @@ Proudly maintained by [Mathieu Bour][1.1], Vice-CTO
 ## Motivations
 Installing Sentry CLI in GitHub Actions can be relevant in many cases.
 Mathrix Education SA is based on Angular, which produces sourcemaps.
-Therefore, we need to upload sourcemaps, during our compilation workflow.
+Therefore, we need to upload sourcemaps, during our compilation
+workflow.
 
-There is an [official guide to use sentry-cli on the Sentry's blog][2.1],
-but it requires to use a bunch of commands, which is not really straight
-forward.
+There is an
+[official guide to use sentry-cli on the Sentry's blog][2.1],
+but it requires to use a bunch of commands, which is not really
+straight forward.
 
-There are also a Docker-based actions, but they are slower.
+There are also some [Docker-based actions][2.2], but they are quite
+slow.
 
 [2.1]: https://blog.sentry.io/2019/12/17/using-github-actions-to-create-sentry-releases
 [2.2]: https://github.com/marketplace?type=actions&query=sentry
@@ -26,19 +29,16 @@ There are also a Docker-based actions, but they are slower.
 
 ## Usage
 ### Supported operating systems
-This action currently supports only Mac-OS and Ubuntu based systems.
-Windows would require to rewrite some utilities, a PR is welcome!.
-
+This action currently supports Ubuntu, Windows and Mac-OS based systems.
 The supported operating systems matrix is the following:
 
 | Operating system | Status |
 |------------------|-------|
 | `ubuntu-latest`  | ![3.1] |
 | `macos-latest`   | ![3.1] |
-| `windows-latest` | ![3.2] |
+| `windows-latest` | ![3.1] |
 
 [3.1]: https://img.shields.io/badge/status-supported-brightgreen
-[3.2]: https://img.shields.io/badge/status-unsupported-red
 
 ### Inputs
 | Name           | Type                  | Default value |
@@ -58,8 +58,8 @@ may break your workflow if Sentry releases a backward-incompatible
 version.
 
 #### `url`
-The Sentry server URL. By default, this action will configure the Sentry
-CLI to interact with official Sentry server which is
+The Sentry server URL. By default, this action will configure the
+Sentry CLI to interact with official Sentry server which is
 `https://sentry.io`. If you use an on-premise instance, you may provide
 your server URL here.
 
