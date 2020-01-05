@@ -3,7 +3,7 @@ import * as core from '@actions/core';
 export class Input {
   /**
    * Check whether the given input exists and is not empty.
-   * @param name
+   * @param name The input name.
    */
   static has(name: string): boolean {
     const actual = core.getInput(name);
@@ -11,9 +11,9 @@ export class Input {
   }
 
   /**
-   * Get the action input.
-   * @param name
-   * @param defaultV
+   * Get an action input.
+   * @param name The input name.
+   * @param defaultV The default value.
    */
   static get<T = string>(name: string, defaultV: any = ''): T {
     return Input.has(name) ? core.getInput(name) : defaultV;
@@ -21,8 +21,8 @@ export class Input {
 
   /**
    * Execute a callback when the given input exists and is not empty.
-   * @param name
-   * @param callback
+   * @param name The input name.
+   * @param callback The callback to execute if the input is present.
    */
   static whenHas<T = string>(name: string, callback: (val: T) => void) {
     if (!Input.has(name)) {

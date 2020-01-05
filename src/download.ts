@@ -34,18 +34,23 @@ export class Download {
     const downloadPath = await tc.downloadTool(Download.getSentryLink());
     let destinationPath;
 
-    core.debug(`Download path: ${downloadPath}`);
+    core.info(`Download path: ${downloadPath}`);
 
     const root = process.platform === 'win32' ? 'C:\\' : '/';
     const home = process.env.HOME ?? process.env.HOMEPATH ?? root;
     const binDir = resolve(home, 'tools', 'sentry-cli', 'bin');
 
+    core.debug(`Home directory: ${home}`);
+    core.debug(`Installation directory: ${binDir}`);
+
+    // Create the installation directory if needed
     if (!existsSync(binDir)) {
       await io.mkdirP(binDir);
     }
 
     destinationPath = resolve(binDir, 'sentry-cli');
 
+    // OS-depend operations
     switch (process.platform) {
       case 'linux':
       case 'darwin':
@@ -55,6 +60,7 @@ export class Download {
         destinationPath += '.exe';
     }
 
+    // Move to destination path
     await io.mv(downloadPath, destinationPath);
 
     core.info(`sentry-cli executable has been installed in ${destinationPath}`);
