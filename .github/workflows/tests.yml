@@ -26,11 +26,18 @@ jobs:
       - name: Display Sentry CLI info
         run: sentry-cli info
       - name: Make release
+        if: contains('ubuntu', matrix.os)
         run: |
           VERSION=`sentry-cli releases propose-version`
           sentry-cli releases new "$VERSION"
           sentry-cli releases set-commits "$VERSION" --auto
-          sentry-cli releases files "$VERSION" upload-sourcemaps ./dist
+          sentry-cli releases files "$VERSION" upload-sourcemaps ./dist \
+            --rewrite \
+            --ext js \
+            --ext map \
+            --validate \
+            --verbose \
+            --strip-common-prefix
           sentry-cli releases finalize "$VERSION"
       - name: Send test event
         run: |
