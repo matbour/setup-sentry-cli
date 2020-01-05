@@ -25,10 +25,6 @@ jobs:
           INPUT_PROJECT: ${{ secrets.SENTRY_PROJECT }}
       - name: Display Sentry CLI info
         run: sentry-cli info
-      - name: Send test event
-        run: |
-          export SENTRY_DSN=${{ secrets.SENTRY_DSN }}
-          sentry-cli send-event -m "Hello from GitHub Actions"
       - name: Make release
         run: |
           VERSION=`sentry-cli releases propose-version`
@@ -36,5 +32,8 @@ jobs:
           sentry-cli releases set-commits "$VERSION" --auto
           sentry-cli releases files "$VERSION" upload-sourcemaps ./dist
           sentry-cli releases finalize "$VERSION"
-
+      - name: Send test event
+        run: |
+          export SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          sentry-cli send-event -m "Hello from GitHub Actions"
 
