@@ -55,7 +55,7 @@ export class Download {
 
     await io.mv(downloadPath, destinationPath);
 
-    core.info(`sentry-cli executable has bin installed in ${destinationPath}`);
+    core.info(`sentry-cli executable has been installed in ${destinationPath}`);
     core.addPath(binDir);
   }
 }

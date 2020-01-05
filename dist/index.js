@@ -4248,7 +4248,7 @@ class download_Download {
                 throw new Error(`Unsupported platform: ${process.platform}`);
         }
         await Object(io.mv)(downloadPath, destinationPath);
-        Object(core.info)(`sentry-cli executable has bin installed in ${destinationPath}`);
+        Object(core.info)(`sentry-cli executable has been installed in ${destinationPath}`);
         Object(core.addPath)(binDir);
     }
 }
