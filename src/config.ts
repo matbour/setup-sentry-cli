@@ -13,7 +13,7 @@ export class Config {
     });
 
     // Authenticate to the Sentry server
-    Input.whenHas('name', token => {
+    Input.whenHas('token', token => {
       core.setSecret(token);
       core.exportVariable('SENTRY_AUTH_TOKEN', token);
     });
