@@ -51,6 +51,8 @@ export class Download {
       case 'darwin':
         await exec.exec('chmod', ['+x', downloadPath]);
         break;
+      case 'win32':
+        destinationPath += '.exe';
     }
 
     await io.mv(downloadPath, destinationPath);

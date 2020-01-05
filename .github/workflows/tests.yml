@@ -39,6 +39,7 @@ jobs:
             --strip-common-prefix
           sentry-cli releases finalize "$VERSION"
       - name: Send test event
+        if: contains(matrix.os, 'ubuntu')  # do not duplicate events
         run: |
           export SENTRY_DSN=${{ secrets.SENTRY_DSN }}
           sentry-cli send-event -m "Hello from GitHub Actions"
