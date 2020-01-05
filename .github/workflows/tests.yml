@@ -26,7 +26,7 @@ jobs:
       - name: Display Sentry CLI info
         run: sentry-cli info
       - name: Make release
-        if: contains('ubuntu', matrix.os)
+        if: contains(matrix.os, 'ubuntu')  # do not duplicate releases
         run: |
           VERSION=`sentry-cli releases propose-version`
           sentry-cli releases new "$VERSION"
