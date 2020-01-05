@@ -24,7 +24,7 @@ jobs:
           INPUT_ORGANIZATION: ${{ secrets.SENTRY_ORGANIZATION }}
           INPUT_PROJECT: ${{ secrets.SENTRY_PROJECT }}
       - name: Display Sentry CLI info
-        run: sentry-cli info || exit 0
+        run: sentry-cli info
       - name: Make release
         run: |
           VERSION=`sentry-cli releases propose-version`
