@@ -20,8 +20,8 @@ export class Download {
         return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
       case 'darwin':
         return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
-      // case 'win32':
-      //   return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
+      case 'win32':
+        return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
       default:
         throw new Error(`Unsupported platform: ${process.platform}`);
     }
@@ -36,21 +36,21 @@ export class Download {
 
     core.debug(`Download path: ${downloadPath}`);
 
-    const home = process.env.HOME ?? '/';
+    const root = process.platform === 'win32' ? 'C:\\' : '/';
+    const home = process.env.HOME ?? process.env.HOMEPATH ?? root;
     const binDir = resolve(home, 'tools', 'sentry-cli', 'bin');
 
     if (!existsSync(binDir)) {
       await io.mkdirP(binDir);
     }
 
+    destinationPath = resolve(binDir, 'sentry-cli');
+
     switch (process.platform) {
       case 'linux':
       case 'darwin':
-        destinationPath = resolve(binDir, 'sentry-cli');
         await exec.exec('chmod', ['+x', downloadPath]);
         break;
-      default:
-        throw new Error(`Unsupported platform: ${process.platform}`);
     }
 
     await io.mv(downloadPath, destinationPath);

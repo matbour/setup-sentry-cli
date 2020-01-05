@@ -4,8 +4,8 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        version: [latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        version: [latest, 1.49.0]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -28,8 +28,6 @@ jobs:
       - name: Make release
         if: contains(matrix.os, 'ubuntu')  # do not duplicate releases
         run: |
-
-
           VERSION=`sentry-cli releases propose-version`
           sentry-cli releases new "$VERSION"
           sentry-cli releases set-commits "$VERSION" --auto
