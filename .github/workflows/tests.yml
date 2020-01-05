@@ -28,7 +28,7 @@ jobs:
           sentry-cli --help
           sentry-cli info
       - name: Make release
-        if: contains(matrix.os, 'ubuntu') && matrix.version === 'latest'  # do not duplicate releases
+        if: contains(matrix.os, 'ubuntu') && matrix.version == 'latest'  # do not duplicate releases
         run: |
           VERSION=`sentry-cli releases propose-version`
           sentry-cli releases new "$VERSION"
@@ -41,7 +41,7 @@ jobs:
             --strip-common-prefix
           sentry-cli releases finalize "$VERSION"
       - name: Send test event
-        if: contains(matrix.os, 'ubuntu') && matrix.version === 'latest'  # do not duplicate events
+        if: contains(matrix.os, 'ubuntu') && matrix.version == 'latest'  # do not duplicate events
         run: |
           export SENTRY_DSN=${{ secrets.SENTRY_DSN }}
           sentry-cli send-event -m "Hello from GitHub Actions"
