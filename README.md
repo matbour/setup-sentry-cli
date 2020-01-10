@@ -64,7 +64,8 @@ Sentry CLI to interact with official Sentry server which is
 your server URL here.
 
 #### `token`
-This is the token which will be used by the Sentry CLI to authenticate
+This is the token which will be used by the Sentry CLI to 
+enticate
 against the Sentry server.
 You may generate it on your personal account page.
 
@@ -89,7 +90,7 @@ Sentry CLI, without any authentication.
   with:
     version: latest # optional if 'latest'
     url: https://sentry.yourcompany.com
-    auth: ${{ SECRETS.SENTRY_TOKEN }} # from GitHub secrets
+    token: ${{ SECRETS.SENTRY_TOKEN }} # from GitHub secrets
     organization: my-org
     project: my-project
 ```
