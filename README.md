@@ -64,8 +64,7 @@ Sentry CLI to interact with official Sentry server which is
 your server URL here.
 
 #### `token`
-This is the token which will be used by the Sentry CLI to 
-enticate
+This is the token which will be used by the Sentry CLI to authenticate
 against the Sentry server.
 You may generate it on your personal account page.
 
