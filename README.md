@@ -89,7 +89,7 @@ Sentry CLI, without any authentication.
   with:
     version: latest # optional if 'latest'
     url: https://sentry.yourcompany.com
-    auth: ${{ SECRETS.SENTRY_TOKEN }} # from GitHub secrets
+    token: ${{ SECRETS.SENTRY_TOKEN }} # from GitHub secrets
     organization: my-org
     project: my-project
 ```
