@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as io from '@actions/io';
 import * as tc from '@actions/tool-cache';
-import { existsSync } from 'fs';
+import { existsSync, copyFileSync, unlinkSync } from 'fs';
 import { resolve } from 'path';
 import { Input } from './utils/input';
 
@@ -61,7 +61,8 @@ export class Download {
     }
 
     // Move to destination path
-    await io.mv(downloadPath, destinationPath);
+    copyFileSync(downloadPath, destinationPath);
+    unlinkSync(downloadPath);
 
     core.info(`sentry-cli executable has been installed in ${destinationPath}`);
     core.addPath(binDir);
