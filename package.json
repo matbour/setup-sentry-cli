@@ -1,6 +1,6 @@
 {
   "name": "@mathrix-education/setup-sentry-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Install the Sentry CLI in your GitHub Actions workflow.",
   "keywords": [
     "github-actions",
