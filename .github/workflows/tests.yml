@@ -16,13 +16,13 @@ jobs:
         with:
           node-version: 12.x
       - name: Install Sentry CLI
-        run: node dist/index.js
-        env:
-          INPUT_VERSION: ${{ matrix.version }}
-          INPUT_URL: ${{ secrets.SENTRY_URL }}
-          INPUT_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          INPUT_ORGANIZATION: ${{ secrets.SENTRY_ORGANIZATION }}
-          INPUT_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        uses: ./
+        with:
+          version: ${{ matrix.version }}
+          url: ${{ secrets.SENTRY_URL }}
+          token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          organization: ${{ secrets.SENTRY_ORGANIZATION }}
+          project: ${{ secrets.SENTRY_PROJECT }}
       - name: Display Sentry CLI info
         run: |
           sentry-cli --help
