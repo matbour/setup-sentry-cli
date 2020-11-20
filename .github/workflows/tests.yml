@@ -12,7 +12,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v1
       - name: Setup Node.js 12
-        uses: actions/setup-node@v1.2.0
+        uses: actions/setup-node@v1
         with:
           node-version: 12.x
       - name: Install Sentry CLI
