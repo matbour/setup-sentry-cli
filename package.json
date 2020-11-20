@@ -1,6 +1,6 @@
 {
   "name": "@mathrix-education/setup-sentry-cli",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "Install the Sentry CLI in your GitHub Actions workflow.",
   "keywords": [
     "github-actions",
@@ -23,20 +23,32 @@
   "browser": false,
   "repository": "github:mathrix-education/setup-sentry-cli",
   "scripts": {
-    "build": "ncc build ./src/index.ts -o dist -m -s --no-source-map-register && node sourcemap.js"
+    "clean": "rimraf dist",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint \"{src,tests}/**/*.ts\"",
+    "lint:fix": "eslint \"{src,tests}/**/*.ts\" --fix",
+    "build": "npm run clean && ncc build --source-map --no-source-map-register ./src/index.ts"
   },
   "dependencies": {
-    "@actions/core": "^1.2.0",
-    "@actions/exec": "^1.0.2",
-    "@actions/io": "^1.0.1",
-    "@actions/tool-cache": "^1.1.2"
+    "@actions/core": "^1.2.6",
+    "@actions/exec": "^1.0.4",
+    "@actions/io": "^1.0.2",
+    "@actions/tool-cache": "^1.6.1",
+    "source-map-support": "^0.5.19"
   },
   "devDependencies": {
-    "@types/node": "^13.1.4",
-    "@zeit/ncc": "^0.21.0",
-    "husky": "^3.1.0",
-    "ts-node": "^8.5.4",
-    "typescript": "^3.7.4"
+    "@types/node": "^14.14.9",
+    "@typescript-eslint/eslint-plugin": "^4.5.0",
+    "@typescript-eslint/parser": "^4.5.0",
+    "@zeit/ncc": "^0.22.3",
+    "eslint": "^7.12.0",
+    "eslint-config-prettier": "^6.14.0",
+    "eslint-plugin-import": "^2.22.1",
+    "husky": "^4.3.0",
+    "lint-staged": "^10.5.0",
+    "prettier": "^2.2.0",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.1.2"
   },
   "os": [
     "linux",
