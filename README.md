@@ -30,7 +30,7 @@ slow.
 ## Usage
 ### Supported operating systems
 This action currently supports Ubuntu, Windows and Mac-OS based systems.
-The supported operating systems matrix is the following:
+The supported operating system matrix is the following:
 
 | Operating system | Status |
 |------------------|-------|
@@ -85,7 +85,7 @@ Sentry CLI, without any authentication.
 ### Typical CI configuration
 ```yaml
 - name: Setup Sentry CLI
-  uses: mathrix-education/setup-sentry-cli@0.1.0
+  uses: mathrix-education/setup-sentry-cli@1.0.0
   with:
     version: latest # optional if 'latest'
     url: https://sentry.yourcompany.com
@@ -93,7 +93,7 @@ Sentry CLI, without any authentication.
     organization: my-org
     project: my-project
 ```
-In this example, you provide a authentication token. The action
+In this example, you provide an authentication token. The action
 automatically download the latest version of the Sentry CLI and
 authenticate using the provided token.
 
