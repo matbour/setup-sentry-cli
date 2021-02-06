@@ -249,10 +249,10 @@ var require_core = __commonJS((exports2) => {
     return process.env["RUNNER_DEBUG"] === "1";
   }
   exports2.isDebug = isDebug;
-  function debug2(message) {
+  function debug(message) {
     command_1.issueCommand("debug", {}, message);
   }
-  exports2.debug = debug2;
+  exports2.debug = debug;
   function error(message) {
     command_1.issue("error", message instanceof Error ? message.toString() : message);
   }
@@ -1214,15 +1214,15 @@ var require_exec = __commonJS((exports2) => {
 // node_modules/semver/semver.js
 var require_semver = __commonJS((exports2, module2) => {
   exports2 = module2.exports = SemVer;
-  var debug2;
+  var debug;
   if (typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG)) {
-    debug2 = function() {
+    debug = function() {
       var args = Array.prototype.slice.call(arguments, 0);
       args.unshift("SEMVER");
       console.log.apply(console, args);
     };
   } else {
-    debug2 = function() {
+    debug = function() {
     };
   }
   exports2.SEMVER_SPEC_VERSION = "2.0.0";
@@ -1319,7 +1319,7 @@ var require_semver = __commonJS((exports2, module2) => {
   tok("STAR");
   src[t.STAR] = "(<|>)?=?\\s*\\*";
   for (var i = 0; i < R; i++) {
-    debug2(i, src[i]);
+    debug(i, src[i]);
     if (!re[i]) {
       re[i] = new RegExp(src[i]);
     }
@@ -1384,7 +1384,7 @@ var require_semver = __commonJS((exports2, module2) => {
     if (!(this instanceof SemVer)) {
       return new SemVer(version, options);
     }
-    debug2("SemVer", version, options);
+    debug("SemVer", version, options);
     this.options = options;
     this.loose = !!options.loose;
     var m = version.trim().match(options.loose ? re[t.LOOSE] : re[t.FULL]);
@@ -1431,7 +1431,7 @@ var require_semver = __commonJS((exports2, module2) => {
     return this.version;
   };
   SemVer.prototype.compare = function(other) {
-    debug2("SemVer.compare", this.version, this.options, other);
+    debug("SemVer.compare", this.version, this.options, other);
     if (!(other instanceof SemVer)) {
       other = new SemVer(other, this.options);
     }
@@ -1458,7 +1458,7 @@ var require_semver = __commonJS((exports2, module2) => {
     do {
       var a = this.prerelease[i2];
       var b = other.prerelease[i2];
-      debug2("prerelease compare", i2, a, b);
+      debug("prerelease compare", i2, a, b);
       if (a === void 0 && b === void 0) {
         return 0;
       } else if (b === void 0) {
@@ -1480,7 +1480,7 @@ var require_semver = __commonJS((exports2, module2) => {
     do {
       var a = this.build[i2];
       var b = other.build[i2];
-      debug2("prerelease compare", i2, a, b);
+      debug("prerelease compare", i2, a, b);
       if (a === void 0 && b === void 0) {
         return 0;
       } else if (b === void 0) {
@@ -1739,7 +1739,7 @@ var require_semver = __commonJS((exports2, module2) => {
     if (!(this instanceof Comparator)) {
       return new Comparator(comp, options);
     }
-    debug2("comparator", comp, options);
+    debug("comparator", comp, options);
     this.options = options;
     this.loose = !!options.loose;
     this.parse(comp);
@@ -1748,7 +1748,7 @@ var require_semver = __commonJS((exports2, module2) => {
     } else {
       this.value = this.operator + this.semver.version;
     }
-    debug2("comp", this);
+    debug("comp", this);
   }
   var ANY = {};
   Comparator.prototype.parse = function(comp) {
@@ -1771,7 +1771,7 @@ var require_semver = __commonJS((exports2, module2) => {
     return this.value;
   };
   Comparator.prototype.test = function(version) {
-    debug2("Comparator.test", version, this.options.loose);
+    debug("Comparator.test", version, this.options.loose);
     if (this.semver === ANY || version === ANY) {
       return true;
     }
@@ -1865,9 +1865,9 @@ var require_semver = __commonJS((exports2, module2) => {
     range = range.trim();
     var hr = loose ? re[t.HYPHENRANGELOOSE] : re[t.HYPHENRANGE];
     range = range.replace(hr, hyphenReplace);
-    debug2("hyphen replace", range);
+    debug("hyphen replace", range);
     range = range.replace(re[t.COMPARATORTRIM], comparatorTrimReplace);
-    debug2("comparator trim", range, re[t.COMPARATORTRIM]);
+    debug("comparator trim", range, re[t.COMPARATORTRIM]);
     range = range.replace(re[t.TILDETRIM], tildeTrimReplace);
     range = range.replace(re[t.CARETTRIM], caretTrimReplace);
     range = range.split(/\s+/).join(" ");
@@ -1920,15 +1920,15 @@ var require_semver = __commonJS((exports2, module2) => {
     });
   }
   function parseComparator(comp, options) {
-    debug2("comp", comp, options);
+    debug("comp", comp, options);
     comp = replaceCarets(comp, options);
-    debug2("caret", comp);
+    debug("caret", comp);
     comp = replaceTildes(comp, options);
-    debug2("tildes", comp);
+    debug("tildes", comp);
     comp = replaceXRanges(comp, options);
-    debug2("xrange", comp);
+    debug("xrange", comp);
     comp = replaceStars(comp, options);
-    debug2("stars", comp);
+    debug("stars", comp);
     return comp;
   }
   function isX(id) {
@@ -1942,7 +1942,7 @@ var require_semver = __commonJS((exports2, module2) => {
   function replaceTilde(comp, options) {
     var r = options.loose ? re[t.TILDELOOSE] : re[t.TILDE];
     return comp.replace(r, function(_, M, m, p, pr) {
-      debug2("tilde", comp, _, M, m, p, pr);
+      debug("tilde", comp, _, M, m, p, pr);
       var ret;
       if (isX(M)) {
         ret = "";
@@ -1951,12 +1951,12 @@ var require_semver = __commonJS((exports2, module2) => {
       } else if (isX(p)) {
         ret = ">=" + M + "." + m + ".0 <" + M + "." + (+m + 1) + ".0";
       } else if (pr) {
-        debug2("replaceTilde pr", pr);
+        debug("replaceTilde pr", pr);
         ret = ">=" + M + "." + m + "." + p + "-" + pr + " <" + M + "." + (+m + 1) + ".0";
       } else {
         ret = ">=" + M + "." + m + "." + p + " <" + M + "." + (+m + 1) + ".0";
       }
-      debug2("tilde return", ret);
+      debug("tilde return", ret);
       return ret;
     });
   }
@@ -1966,10 +1966,10 @@ var require_semver = __commonJS((exports2, module2) => {
     }).join(" ");
   }
   function replaceCaret(comp, options) {
-    debug2("caret", comp, options);
+    debug("caret", comp, options);
     var r = options.loose ? re[t.CARETLOOSE] : re[t.CARET];
     return comp.replace(r, function(_, M, m, p, pr) {
-      debug2("caret", comp, _, M, m, p, pr);
+      debug("caret", comp, _, M, m, p, pr);
       var ret;
       if (isX(M)) {
         ret = "";
@@ -1982,7 +1982,7 @@ var require_semver = __commonJS((exports2, module2) => {
           ret = ">=" + M + "." + m + ".0 <" + (+M + 1) + ".0.0";
         }
       } else if (pr) {
-        debug2("replaceCaret pr", pr);
+        debug("replaceCaret pr", pr);
         if (M === "0") {
           if (m === "0") {
             ret = ">=" + M + "." + m + "." + p + "-" + pr + " <" + M + "." + m + "." + (+p + 1);
@@ -1993,7 +1993,7 @@ var require_semver = __commonJS((exports2, module2) => {
           ret = ">=" + M + "." + m + "." + p + "-" + pr + " <" + (+M + 1) + ".0.0";
         }
       } else {
-        debug2("no pr");
+        debug("no pr");
         if (M === "0") {
           if (m === "0") {
             ret = ">=" + M + "." + m + "." + p + " <" + M + "." + m + "." + (+p + 1);
@@ -2004,12 +2004,12 @@ var require_semver = __commonJS((exports2, module2) => {
           ret = ">=" + M + "." + m + "." + p + " <" + (+M + 1) + ".0.0";
         }
       }
-      debug2("caret return", ret);
+      debug("caret return", ret);
       return ret;
     });
   }
   function replaceXRanges(comp, options) {
-    debug2("replaceXRanges", comp, options);
+    debug("replaceXRanges", comp, options);
     return comp.split(/\s+/).map(function(comp2) {
       return replaceXRange(comp2, options);
     }).join(" ");
@@ -2018,7 +2018,7 @@ var require_semver = __commonJS((exports2, module2) => {
     comp = comp.trim();
     var r = options.loose ? re[t.XRANGELOOSE] : re[t.XRANGE];
     return comp.replace(r, function(ret, gtlt, M, m, p, pr) {
-      debug2("xRange", comp, ret, gtlt, M, m, p, pr);
+      debug("xRange", comp, ret, gtlt, M, m, p, pr);
       var xM = isX(M);
       var xm = xM || isX(m);
       var xp = xm || isX(p);
@@ -2062,12 +2062,12 @@ var require_semver = __commonJS((exports2, module2) => {
       } else if (xp) {
         ret = ">=" + M + "." + m + ".0" + pr + " <" + M + "." + (+m + 1) + ".0" + pr;
       }
-      debug2("xRange return", ret);
+      debug("xRange return", ret);
       return ret;
     });
   }
   function replaceStars(comp, options) {
-    debug2("replaceStars", comp, options);
+    debug("replaceStars", comp, options);
     return comp.trim().replace(re[t.STAR], "");
   }
   function hyphenReplace($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr, tb) {
@@ -2119,7 +2119,7 @@ var require_semver = __commonJS((exports2, module2) => {
     }
     if (version.prerelease.length && !options.includePrerelease) {
       for (i2 = 0; i2 < set.length; i2++) {
-        debug2(set[i2].semver);
+        debug(set[i2].semver);
         if (set[i2].semver === ANY) {
           continue;
         }
@@ -2608,7 +2608,7 @@ var require_tunnel = __commonJS((exports2) => {
       connectOptions.headers = connectOptions.headers || {};
       connectOptions.headers["Proxy-Authorization"] = "Basic " + new Buffer(connectOptions.proxyAuth).toString("base64");
     }
-    debug2("making CONNECT request");
+    debug("making CONNECT request");
     var connectReq = self.request(connectOptions);
     connectReq.useChunkedEncodingByDefault = false;
     connectReq.once("response", onResponse);
@@ -2628,7 +2628,7 @@ var require_tunnel = __commonJS((exports2) => {
       connectReq.removeAllListeners();
       socket.removeAllListeners();
       if (res.statusCode !== 200) {
-        debug2("tunneling socket could not be established, statusCode=%d", res.statusCode);
+        debug("tunneling socket could not be established, statusCode=%d", res.statusCode);
         socket.destroy();
         var error = new Error("tunneling socket could not be established, statusCode=" + res.statusCode);
         error.code = "ECONNRESET";
@@ -2637,7 +2637,7 @@ var require_tunnel = __commonJS((exports2) => {
         return;
       }
       if (head.length > 0) {
-        debug2("got illegal response body from proxy");
+        debug("got illegal response body from proxy");
         socket.destroy();
         var error = new Error("got illegal response body from proxy");
         error.code = "ECONNRESET";
@@ -2645,13 +2645,13 @@ var require_tunnel = __commonJS((exports2) => {
         self.removeSocket(placeholder);
         return;
       }
-      debug2("tunneling connection has established");
+      debug("tunneling connection has established");
       self.sockets[self.sockets.indexOf(placeholder)] = socket;
       return cb(socket);
     }
     function onError(cause) {
       connectReq.removeAllListeners();
-      debug2("tunneling socket could not be established, cause=%s\n", cause.message, cause.stack);
+      debug("tunneling socket could not be established, cause=%s\n", cause.message, cause.stack);
       var error = new Error("tunneling socket could not be established, cause=" + cause.message);
       error.code = "ECONNRESET";
       options.request.emit("error", error);
@@ -2709,9 +2709,9 @@ var require_tunnel = __commonJS((exports2) => {
     }
     return target;
   }
-  var debug2;
+  var debug;
   if (process.env.NODE_DEBUG && /\btunnel\b/.test(process.env.NODE_DEBUG)) {
-    debug2 = function() {
+    debug = function() {
       var args = Array.prototype.slice.call(arguments);
       if (typeof args[0] === "string") {
         args[0] = "TUNNEL: " + args[0];
@@ -2721,10 +2721,10 @@ var require_tunnel = __commonJS((exports2) => {
       console.error.apply(console, args);
     };
   } else {
-    debug2 = function() {
+    debug = function() {
     };
   }
-  exports2.debug = debug2;
+  exports2.debug = debug;
 });
 
 // node_modules/tunnel/index.js
@@ -3912,48 +3912,44 @@ var inferInput_default = (name, defaultV = null) => {
 
 // src/download.ts
 var download_default = async () => {
-  var _a, _b;
   const version = inferInput_default("version", "latest");
   import_core4.info(`Detected platform: ${process.platform}`);
   import_core4.info(`Downloading sentry-cli version ${version}`);
   let downloadLink;
+  let binDir;
   switch (process.platform) {
     case "linux":
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
+      binDir = import_path.join("usr", "local", "bin");
       break;
     case "darwin":
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
+      binDir = import_path.join("usr", "local", "bin");
       break;
     case "win32":
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
+      binDir = import_path.join("C:\\", "Program Files", "sentry-cli");
       break;
     default:
       throw new Error(`Unsupported platform: ${process.platform}`);
   }
-  const downloadPath = await import_tool_cache.downloadTool(downloadLink);
-  let destinationPath;
+  const destinationPath = import_path.resolve(binDir, "sentry-cli") + (process.platform === "win32" ? ".exex" : "");
+  import_core4.info(`Installation directory: ${binDir}`);
+  const downloadPath = await import_tool_cache.downloadTool(downloadLink, binDir);
   import_core4.info(`Download path: ${downloadPath}`);
-  const root = process.platform === "win32" ? "C:\\" : "/";
-  const home = (_b = (_a = process.env.HOME) != null ? _a : process.env.HOMEPATH) != null ? _b : root;
-  const binDir = import_path.resolve(home, "tools", "sentry-cli", "bin");
-  import_core4.debug(`Home directory: ${home}`);
-  import_core4.debug(`Installation directory: ${binDir}`);
   if (!import_fs.existsSync(binDir)) {
     await import_io.mkdirP(binDir);
   }
-  destinationPath = import_path.resolve(binDir, "sentry-cli");
   switch (process.platform) {
     case "linux":
     case "darwin":
       await import_exec.exec("chmod", ["+x", downloadPath]);
       break;
-    case "win32":
-      destinationPath += ".exe";
   }
   import_fs.copyFileSync(downloadPath, destinationPath);
   import_fs.unlinkSync(downloadPath);
-  import_core4.info(`sentry-cli executable has been installed in ${destinationPath}`);
   import_core4.addPath(binDir);
+  import_core4.info(`sentry-cli executable has been installed in ${destinationPath}`);
 };
 
 // src/main.ts
