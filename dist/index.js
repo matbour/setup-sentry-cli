@@ -3862,7 +3862,7 @@ var infer_default = (val) => {
     return parseInt(val, 10);
   } else if (val.match(/^0x[0-9a-fA-F]+$/)) {
     return parseInt(val, 16);
-  } else if (val.match(/^\d+\.\d*$/) || val.match(/^\d*\.\d+/)) {
+  } else if (val.match(/^\d+\.\d*$/) || val.match(/^\d*\.\d+$/)) {
     return parseFloat(val);
   } else if (val.match(/^null$/i)) {
     return null;
@@ -3919,15 +3919,15 @@ var download_default = async () => {
   let binDir;
   switch (process.platform) {
     case "linux":
-      downloadLink = `https://github.com/getsentry/sentry-cli/releases/download/${version}/sentry-cli-Linux-x86_64`;
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
       binDir = import_path.join("/usr", "local", "bin");
       break;
     case "darwin":
-      downloadLink = `https://github.com/getsentry/sentry-cli/releases/download/${version}/sentry-cli-Darwin-x86_64`;
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
       binDir = import_path.join("/usr", "local", "bin");
       break;
     case "win32":
-      downloadLink = `https://github.com/getsentry/sentry-cli/releases/download/${version}/sentry-cli-Windows-x86_64.exe`;
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
       binDir = import_path.join("C:\\", "Program Files", "sentry-cli");
       break;
     default:

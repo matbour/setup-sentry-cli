@@ -15,18 +15,18 @@ export default async (): Promise<void> => {
 
   switch (process.platform) {
     case 'linux':
-      downloadLink = `https://github.com/getsentry/sentry-cli/releases/download/${version}/sentry-cli-Linux-x86_64`;
-      // downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
+      // downloadLink = `https://github.com/getsentry/sentry-cli/releases/download/${version}/sentry-cli-Linux-x86_64`;
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
       binDir = join('/usr', 'local', 'bin');
       break;
     case 'darwin':
-      downloadLink = `https://github.com/getsentry/sentry-cli/releases/download/${version}/sentry-cli-Darwin-x86_64`;
-      // downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
+      // downloadLink = `https://github.com/getsentry/sentry-cli/releases/download/${version}/sentry-cli-Darwin-x86_64`;
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
       binDir = join('/usr', 'local', 'bin');
       break;
     case 'win32':
-      downloadLink = `https://github.com/getsentry/sentry-cli/releases/download/${version}/sentry-cli-Windows-x86_64.exe`;
-      // downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
+      // downloadLink = `https://github.com/getsentry/sentry-cli/releases/download/${version}/sentry-cli-Windows-x86_64.exe`;
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
       binDir = join('C:\\', 'Program Files', 'sentry-cli');
       break;
     default:

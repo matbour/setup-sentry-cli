@@ -10,7 +10,7 @@ export default <T = string>(val: string): T => {
     return (parseInt(val, 10) as unknown) as T;
   } else if (val.match(/^0x[0-9a-fA-F]+$/)) {
     return (parseInt(val, 16) as unknown) as T;
-  } else if (val.match(/^\d+\.\d*$/) || val.match(/^\d*\.\d+/)) {
+  } else if (val.match(/^\d+\.\d*$/) || val.match(/^\d*\.\d+$/)) {
     return (parseFloat(val) as unknown) as T;
   } else if (val.match(/^null$/i)) {
     return (null as unknown) as T;
