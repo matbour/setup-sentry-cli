@@ -3936,7 +3936,7 @@ var download_default = async () => {
   const destinationPath = import_path.resolve(binDir, "sentry-cli") + (process.platform === "win32" ? ".exe" : "");
   import_core4.info(`Installation directory: ${binDir}`);
   import_core4.info(`Downloading from: ${downloadLink}`);
-  const downloadPath = await import_tool_cache.downloadTool(downloadLink, destinationPath);
+  const downloadPath = await import_tool_cache.downloadTool(downloadLink);
   import_core4.info(`Download path: ${downloadPath}`);
   if (!import_fs.existsSync(binDir)) {
     await import_io.mkdirP(binDir);
@@ -3944,10 +3944,13 @@ var download_default = async () => {
   switch (process.platform) {
     case "linux":
     case "darwin":
-      await import_exec.exec("chmod", ["+x", downloadPath]);
+      await import_exec.exec("sudo", ["cp", downloadPath, destinationPath]);
+      await import_exec.exec("chmod", ["+x", destinationPath]);
+      break;
+    case "win32":
+      import_fs.copyFileSync(downloadPath, destinationPath);
       break;
   }
-  import_fs.copyFileSync(downloadPath, destinationPath);
   import_core4.addPath(binDir);
   import_core4.info(`sentry-cli executable has been installed in ${destinationPath}`);
 };

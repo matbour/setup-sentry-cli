@@ -37,7 +37,7 @@ export default async (): Promise<void> => {
   info(`Installation directory: ${binDir}`);
 
   info(`Downloading from: ${downloadLink}`);
-  const downloadPath = await downloadTool(downloadLink, destinationPath);
+  const downloadPath = await downloadTool(downloadLink);
   info(`Download path: ${downloadPath}`);
 
   // Create the installation directory if needed
@@ -49,14 +49,15 @@ export default async (): Promise<void> => {
   switch (process.platform) {
     case 'linux':
     case 'darwin':
-      await exec('chmod', ['+x', downloadPath]);
+      await exec('sudo', ['cp', downloadPath, destinationPath]);
+      await exec('chmod', ['+x', destinationPath]);
+      break;
+    case 'win32':
+      // Move to destination path
+      copyFileSync(downloadPath, destinationPath);
       break;
   }
 
-  // Move to destination path
-  copyFileSync(downloadPath, destinationPath);
-  // unlinkSync(downloadPath);
   addPath(binDir);
-
   info(`sentry-cli executable has been installed in ${destinationPath}`);
 };
