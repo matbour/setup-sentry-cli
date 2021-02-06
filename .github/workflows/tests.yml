@@ -1,10 +1,9 @@
 name: Tests
 on:
   push:
-    branches: [ main, v*-dev ]
+    branches: [ main ]
   pull_request:
     types: [ opened, synchronize, reopened ]
-    branches-ignore: [ v*-dev ]
 jobs:
   lint:
     name: Lint with ESLint + TypeCheck
