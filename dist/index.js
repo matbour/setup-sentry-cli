@@ -3923,7 +3923,7 @@ var download_default = async () => {
 
 // src/main.ts
 async function main() {
-  await configure_default();
+  configure_default();
   await download_default();
 }
 main().catch((e) => import_core3.setFailed(e));

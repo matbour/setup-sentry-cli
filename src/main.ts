@@ -3,7 +3,7 @@ import configure from './configure';
 import download from './download';
 
 async function main() {
-  await configure();
+  configure();
   await download();
 }
 
