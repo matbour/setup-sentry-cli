@@ -1,1 +1,3 @@
-pre-commit: npm run build && git add dist/; lint-staged
+hooks:
+  commit-msg: standard-commithook
+  pre-commit: npm run build && git add dist && lint-staged

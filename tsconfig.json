@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2018",
+    "module": "es2015",
+    "target": "es2019",
     "moduleResolution": "node",
     "strict": true,
     "lib": [
@@ -9,10 +10,12 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "esModuleInterop": true,
-    "sourceMap": true,
-    "removeComments": true,
+    "isolatedModules": true,
     "typeRoots": [
       "node_modules/@types"
     ]
-  }
+  },
+  "include": [
+    "src"
+  ]
 }
