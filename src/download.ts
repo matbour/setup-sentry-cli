@@ -1,70 +1,61 @@
-import * as core from '@actions/core';
-import * as exec from '@actions/exec';
-import * as io from '@actions/io';
-import * as tc from '@actions/tool-cache';
-import { existsSync, copyFileSync, unlinkSync } from 'fs';
-import { resolve } from 'path';
-import { Input } from './utils/input';
+import { addPath, debug, getInput, info } from '@actions/core';
+import { exec } from '@actions/exec';
+import { mkdirP } from '@actions/io';
+import { downloadTool } from '@actions/tool-cache';
+import { copyFileSync, existsSync } from 'fs';
+import { join, resolve } from 'path';
 
-export class Download {
-  /**
-   * Get the sentry-cli download URL, based on the current platform and input version.
-   */
-  private static getSentryLink(): string {
-    const version = Input.get('version', 'latest');
-    core.info(`Detected platform: ${process.platform}`);
-    core.info(`Downloading sentry-cli version ${version}`);
+export default async (): Promise<void> => {
+  const version = getInput('version');
 
-    switch (process.platform) {
-      case 'linux':
-        return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
-      case 'darwin':
-        return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
-      case 'win32':
-        return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
-      default:
-        throw new Error(`Unsupported platform: ${process.platform}`);
-    }
+  debug(`Detected platform: ${process.platform}`);
+  info(`Installing sentry-cli version ${version}`);
+
+  let downloadLink: string;
+  let binDir: string;
+
+  switch (process.platform) {
+    case 'linux':
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
+      binDir = join('/usr', 'local', 'bin');
+      break;
+    case 'darwin':
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
+      binDir = join('/usr', 'local', 'bin');
+      break;
+    case 'win32':
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
+      binDir = join('C:\\', 'Program Files', 'sentry-cli');
+      break;
+    default:
+      throw new Error(`Unsupported platform: ${process.platform}`);
   }
 
-  /**
-   * Download the sentry-cli and move it the to standard binaries directory.
-   */
-  static async download(): Promise<void> {
-    const downloadPath = await tc.downloadTool(Download.getSentryLink());
-    let destinationPath;
+  const destinationPath = resolve(binDir, 'sentry-cli') + (process.platform === 'win32' ? '.exe' : '');
+  debug(`Installation directory: ${binDir}`);
 
-    core.info(`Download path: ${downloadPath}`);
+  debug(`Downloading from: ${downloadLink}`);
+  const downloadPath = await downloadTool(downloadLink);
+  debug(`Download path: ${downloadPath}`);
 
-    const root = process.platform === 'win32' ? 'C:\\' : '/';
-    const home = process.env.HOME ?? process.env.HOMEPATH ?? root;
-    const binDir = resolve(home, 'tools', 'sentry-cli', 'bin');
-
-    core.debug(`Home directory: ${home}`);
-    core.debug(`Installation directory: ${binDir}`);
-
-    // Create the installation directory if needed
-    if (!existsSync(binDir)) {
-      await io.mkdirP(binDir);
-    }
-
-    destinationPath = resolve(binDir, 'sentry-cli');
-
-    // OS-depend operations
-    switch (process.platform) {
-      case 'linux':
-      case 'darwin':
-        await exec.exec('chmod', ['+x', downloadPath]);
-        break;
-      case 'win32':
-        destinationPath += '.exe';
-    }
-
-    // Move to destination path
-    copyFileSync(downloadPath, destinationPath);
-    unlinkSync(downloadPath);
-
-    core.info(`sentry-cli executable has been installed in ${destinationPath}`);
-    core.addPath(binDir);
+  // Create the installation directory if needed
+  if (!existsSync(binDir)) {
+    await mkdirP(binDir);
   }
-}
+
+  // OS-depend operations
+  switch (process.platform) {
+    case 'linux':
+    case 'darwin':
+      await exec('sudo', ['cp', downloadPath, destinationPath]);
+      await exec('sudo', ['chmod', '+x', destinationPath]);
+      break;
+    case 'win32':
+      // Move to destination path
+      copyFileSync(downloadPath, destinationPath);
+      break;
+  }
+
+  addPath(binDir);
+  info(`sentry-cli executable has been installed in ${destinationPath}`);
+};
