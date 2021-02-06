@@ -46,7 +46,7 @@ The supported operating system matrix is the following:
 ### Inputs
 | Name           | Type                  | Default value |
 |----------------|-----------------------|---------------|
-| `version`      | `'latest'` / string   | `'latest'`    |
+| `version`      | `'latest'` / `string` | `'latest'`    |
 | `token`        | `string`              | `''`          |
 | `url`          | `string`              | `''`          |
 | `organization` | `string`              | `''`          |
@@ -66,7 +66,8 @@ If you use an on-premise instance, you may provide your server URL here.
 
 #### `token`
 This is the token which will be used by the Sentry CLI to authenticate against the Sentry server.
-You may generate it on your personal account page.
+You may generate it on your personal account page or by creating an internal integration for your organization with
+`Release: Admin` and `Organization: Read` permissions.
 
 #### `organization`
 Define the default organization.
