@@ -45,7 +45,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Setup Node.js 12
         uses: actions/setup-node@v1
         with:
@@ -62,7 +64,7 @@ jobs:
         run: |
           sentry-cli --help
           sentry-cli info
-      - name: Make release
+      - name: Test Sentry Integration
         if: matrix.os == 'ubuntu-20.04' && matrix.version == 'latest'  # do not duplicate releases
         run: |
           VERSION=$(sentry-cli releases propose-version)
@@ -75,9 +77,10 @@ jobs:
             --verbose \
             --strip-common-prefix
           sentry-cli releases finalize "$VERSION"
-      - name: Send test event
-        if: matrix.os == 'ubuntu-20.04' && matrix.version == 'latest'  # do not duplicate events
-        run: |
-          export SENTRY_DSN=${{ secrets.SENTRY_DSN }}
-          sentry-cli send-event -m "Hello from GitHub Actions"
 
+          export SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          sentry-cli send-event \
+            --release="$VERSION" \
+            --fingerprint="GH-DEMO" \
+            --message="Hello from GitHub Actions" \
+            --level=debug
