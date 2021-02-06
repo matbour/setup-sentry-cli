@@ -3919,15 +3919,15 @@ var download_default = async () => {
   let binDir;
   switch (process.platform) {
     case "linux":
-      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
+      downloadLink = `https://github.com/getsentry/sentry-cli/releases/download/${version}/sentry-cli-Linux-x86_64`;
       binDir = import_path.join("/usr", "local", "bin");
       break;
     case "darwin":
-      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
+      downloadLink = `https://github.com/getsentry/sentry-cli/releases/download/${version}/sentry-cli-Darwin-x86_64`;
       binDir = import_path.join("/usr", "local", "bin");
       break;
     case "win32":
-      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
+      downloadLink = `https://github.com/getsentry/sentry-cli/releases/download/${version}/sentry-cli-Windows-x86_64.exe`;
       binDir = import_path.join("C:\\", "Program Files", "sentry-cli");
       break;
     default:
@@ -3935,6 +3935,7 @@ var download_default = async () => {
   }
   const destinationPath = import_path.resolve(binDir, "sentry-cli") + (process.platform === "win32" ? ".exe" : "");
   import_core4.info(`Installation directory: ${binDir}`);
+  import_core4.info(`Downloading from: ${downloadLink}`);
   const downloadPath = await import_tool_cache.downloadTool(downloadLink, destinationPath);
   import_core4.info(`Download path: ${downloadPath}`);
   if (!import_fs.existsSync(binDir)) {
