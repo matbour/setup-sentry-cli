@@ -1,19 +1,27 @@
-import { exportVariable, setSecret } from '@actions/core';
-import ifInput from './utils/ifInput';
+import { exportVariable, getInput, setSecret } from '@actions/core';
 
-export default () => {
+export default (): void => {
   // Set the Sentry URL
-  ifInput('url', url => exportVariable('SENTRY_URL', url));
+  const url = getInput('url');
+  if (url !== '') {
+    exportVariable('SENTRY_URL', url);
+  }
 
-  // Authenticate to the Sentry server
-  ifInput('token', token => {
+  const token = getInput('token');
+  if (token !== '') {
+    exportVariable('SENTRY_AUTH_TOKEN', getInput('token'));
     setSecret(token);
-    exportVariable('SENTRY_AUTH_TOKEN', token);
-  });
+  }
 
   // Set the default organization
-  ifInput('organization', organization => exportVariable('SENTRY_ORG', organization));
+  const organization = getInput('organization');
+  if (organization !== '') {
+    exportVariable('SENTRY_ORG', organization);
+  }
 
   // Set the default project
-  ifInput('project', project => exportVariable('SENTRY_PROJECT', project));
+  const project = getInput('project');
+  if (project !== '') {
+    exportVariable('SENTRY_PROJECT', project);
+  }
 };

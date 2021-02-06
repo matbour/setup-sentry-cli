@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Version 1.1.0](https://github.com/mathieu-bour/setup-sentry-cli/releases/tag/1.1.0)
+- **fix**(macos): make sentry-cli command available on macOS (fixes #4)
+- **build**(*): use esbuild instead of @zeit/ncc
+- **ci**(actions): update the Sentry Integration Test
 - **chore**(rebrand): the repository is now maintained by [mathieu-bour](https://github.com/mathieu-bour)
 
 ## [Version 1.0.0](https://github.com/mathieu-bour/setup-sentry-cli/releases/tag/1.0.0)

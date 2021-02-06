@@ -21,22 +21,23 @@ jobs:
         run: npm run lint
       - name: Run TypeCheck
         run: npm run typecheck
-#  sonarcloud:
-#    name: SonarCloud
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v2
-#        with:
-#          fetch-depth: 0
-#      - name: Patch sonar.properties
-#        run: sed -i s/\$VERSION/$(jq -r .version package.json)/ sonar-project.properties
-#      - name: SonarCloud Scan
-#        uses: SonarSource/sonarcloud-github-action@v1.5
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  sonarcloud:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Patch sonar.properties
+        run: sed -i s/\$VERSION/$(jq -r .version package.json)/ sonar-project.properties
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v1.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   test:
+    name: Test Sentry Integration
     strategy:
       matrix:
         os: [ ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, macos-10.15, windows-2019 ]
