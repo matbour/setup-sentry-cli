@@ -3945,7 +3945,7 @@ var download_default = async () => {
     case "linux":
     case "darwin":
       await import_exec.exec("sudo", ["cp", downloadPath, destinationPath]);
-      await import_exec.exec("chmod", ["+x", destinationPath]);
+      await import_exec.exec("sudo", ["chmod", "+x", destinationPath]);
       break;
     case "win32":
       import_fs.copyFileSync(downloadPath, destinationPath);

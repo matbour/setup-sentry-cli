@@ -50,7 +50,7 @@ export default async (): Promise<void> => {
     case 'linux':
     case 'darwin':
       await exec('sudo', ['cp', downloadPath, destinationPath]);
-      await exec('chmod', ['+x', destinationPath]);
+      await exec('sudo', ['chmod', '+x', destinationPath]);
       break;
     case 'win32':
       // Move to destination path
