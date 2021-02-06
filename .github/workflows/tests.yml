@@ -6,7 +6,7 @@ on:
     types: [ opened, synchronize, reopened ]
 jobs:
   lint:
-    name: Lint with ESLint / Prettier
+    name: Lint with ESLint + TypeCheck
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,6 +19,8 @@ jobs:
         run: npm install
       - name: Run ESLint
         run: npm run lint
+      - name: Run TypeCheck
+        run: npm run typecheck
 #  sonarcloud:
 #    name: SonarCloud
 #    runs-on: ubuntu-latest
