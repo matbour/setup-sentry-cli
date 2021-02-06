@@ -224,14 +224,14 @@ var require_core = __commonJS((exports2) => {
     process.env["PATH"] = `${inputPath}${path.delimiter}${process.env["PATH"]}`;
   }
   exports2.addPath = addPath2;
-  function getInput2(name, options) {
+  function getInput3(name, options) {
     const val = process.env[`INPUT_${name.replace(/ /g, "_").toUpperCase()}`] || "";
     if (options && options.required && !val) {
       throw new Error(`Input required and not supplied: ${name}`);
     }
     return val.trim();
   }
-  exports2.getInput = getInput2;
+  exports2.getInput = getInput3;
   function setOutput(name, value) {
     command_1.issueCommand("set-output", {name}, value);
   }
@@ -503,7 +503,7 @@ var require_io = __commonJS((exports2) => {
   var path = require("path");
   var util_1 = require("util");
   var ioUtil = require_io_util();
-  var exec3 = util_1.promisify(childProcess.exec);
+  var exec2 = util_1.promisify(childProcess.exec);
   function cp(source, dest, options = {}) {
     return __awaiter(this, void 0, void 0, function* () {
       const {force, recursive} = readCopyOptions(options);
@@ -557,9 +557,9 @@ var require_io = __commonJS((exports2) => {
       if (ioUtil.IS_WINDOWS) {
         try {
           if (yield ioUtil.isDirectory(inputPath, true)) {
-            yield exec3(`rd /s /q "${inputPath}"`);
+            yield exec2(`rd /s /q "${inputPath}"`);
           } else {
-            yield exec3(`del /f /a "${inputPath}"`);
+            yield exec2(`del /f /a "${inputPath}"`);
           }
         } catch (err) {
           if (err.code !== "ENOENT")
@@ -581,7 +581,7 @@ var require_io = __commonJS((exports2) => {
           return;
         }
         if (isDir) {
-          yield exec3(`rm -rf "${inputPath}"`);
+          yield exec2(`rm -rf "${inputPath}"`);
         } else {
           yield ioUtil.unlink(inputPath);
         }
@@ -743,7 +743,7 @@ var require_toolrunner = __commonJS((exports2) => {
   var events = __importStar(require("events"));
   var child = __importStar(require("child_process"));
   var path = __importStar(require("path"));
-  var io2 = __importStar(require_io());
+  var io = __importStar(require_io());
   var ioUtil = __importStar(require_io_util());
   var IS_WINDOWS = process.platform === "win32";
   var ToolRunner = class extends events.EventEmitter {
@@ -948,7 +948,7 @@ var require_toolrunner = __commonJS((exports2) => {
         if (!ioUtil.isRooted(this.toolPath) && (this.toolPath.includes("/") || IS_WINDOWS && this.toolPath.includes("\\"))) {
           this.toolPath = path.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
         }
-        this.toolPath = yield io2.which(this.toolPath, true);
+        this.toolPath = yield io.which(this.toolPath, true);
         return new Promise((resolve2, reject) => {
           this._debug(`exec tool: ${this.toolPath}`);
           this._debug("arguments:");
@@ -1196,7 +1196,7 @@ var require_exec = __commonJS((exports2) => {
   };
   Object.defineProperty(exports2, "__esModule", {value: true});
   var tr = __importStar(require_toolrunner());
-  function exec3(commandLine, args, options) {
+  function exec2(commandLine, args, options) {
     return __awaiter(this, void 0, void 0, function* () {
       const commandArgs = tr.argStringToArray(commandLine);
       if (commandArgs.length === 0) {
@@ -1208,7 +1208,7 @@ var require_exec = __commonJS((exports2) => {
       return runner.exec();
     });
   }
-  exports2.exec = exec3;
+  exports2.exec = exec2;
 });
 
 // node_modules/semver/semver.js
@@ -3302,7 +3302,7 @@ var require_retry_helper = __commonJS((exports2) => {
     return result;
   };
   Object.defineProperty(exports2, "__esModule", {value: true});
-  var core5 = __importStar(require_core());
+  var core = __importStar(require_core());
   var RetryHelper = class {
     constructor(maxAttempts, minSeconds, maxSeconds) {
       if (maxAttempts < 1) {
@@ -3325,10 +3325,10 @@ var require_retry_helper = __commonJS((exports2) => {
             if (isRetryable && !isRetryable(err)) {
               throw err;
             }
-            core5.info(err.message);
+            core.info(err.message);
           }
           const seconds = this.getSleepAmount();
-          core5.info(`Waiting ${seconds} seconds before trying again`);
+          core.info(`Waiting ${seconds} seconds before trying again`);
           yield this.sleep(seconds);
           attempt++;
         }
@@ -3393,8 +3393,8 @@ var require_tool_cache = __commonJS((exports2) => {
     return mod && mod.__esModule ? mod : {default: mod};
   };
   Object.defineProperty(exports2, "__esModule", {value: true});
-  var core5 = __importStar(require_core());
-  var io2 = __importStar(require_io());
+  var core = __importStar(require_core());
+  var io = __importStar(require_io());
   var fs = __importStar(require("fs"));
   var mm = __importStar(require_manifest());
   var os = __importStar(require("os"));
@@ -3421,9 +3421,9 @@ var require_tool_cache = __commonJS((exports2) => {
   function downloadTool2(url, dest, auth) {
     return __awaiter(this, void 0, void 0, function* () {
       dest = dest || path.join(_getTempDirectory(), v4_1.default());
-      yield io2.mkdirP(path.dirname(dest));
-      core5.debug(`Downloading ${url}`);
-      core5.debug(`Destination ${dest}`);
+      yield io.mkdirP(path.dirname(dest));
+      core.debug(`Downloading ${url}`);
+      core.debug(`Destination ${dest}`);
       const maxAttempts = 3;
       const minSeconds = _getGlobal("TEST_DOWNLOAD_TOOL_RETRY_MIN_SECONDS", 10);
       const maxSeconds = _getGlobal("TEST_DOWNLOAD_TOOL_RETRY_MAX_SECONDS", 20);
@@ -3451,7 +3451,7 @@ var require_tool_cache = __commonJS((exports2) => {
       });
       let headers;
       if (auth) {
-        core5.debug("set auth");
+        core.debug("set auth");
         headers = {
           authorization: auth
         };
@@ -3459,7 +3459,7 @@ var require_tool_cache = __commonJS((exports2) => {
       const response = yield http.get(url, headers);
       if (response.message.statusCode !== 200) {
         const err = new HTTPError(response.message.statusCode);
-        core5.debug(`Failed to download from "${url}". Code(${response.message.statusCode}) Message(${response.message.statusMessage})`);
+        core.debug(`Failed to download from "${url}". Code(${response.message.statusCode}) Message(${response.message.statusMessage})`);
         throw err;
       }
       const pipeline = util.promisify(stream.pipeline);
@@ -3468,16 +3468,16 @@ var require_tool_cache = __commonJS((exports2) => {
       let succeeded = false;
       try {
         yield pipeline(readStream, fs.createWriteStream(dest));
-        core5.debug("download complete");
+        core.debug("download complete");
         succeeded = true;
         return dest;
       } finally {
         if (!succeeded) {
-          core5.debug("download failed");
+          core.debug("download failed");
           try {
-            yield io2.rmRF(dest);
+            yield io.rmRF(dest);
           } catch (err) {
-            core5.debug(`Failed to delete '${dest}'. ${err.message}`);
+            core.debug(`Failed to delete '${dest}'. ${err.message}`);
           }
         }
       }
@@ -3492,7 +3492,7 @@ var require_tool_cache = __commonJS((exports2) => {
       process.chdir(dest);
       if (_7zPath) {
         try {
-          const logLevel = core5.isDebug() ? "-bb1" : "-bb0";
+          const logLevel = core.isDebug() ? "-bb1" : "-bb0";
           const args = [
             "x",
             logLevel,
@@ -3526,7 +3526,7 @@ var require_tool_cache = __commonJS((exports2) => {
           silent: true
         };
         try {
-          const powershellPath = yield io2.which("powershell", true);
+          const powershellPath = yield io.which("powershell", true);
           yield exec_1.exec(`"${powershellPath}"`, args, options);
         } finally {
           process.chdir(originalCwd);
@@ -3542,7 +3542,7 @@ var require_tool_cache = __commonJS((exports2) => {
         throw new Error("parameter 'file' is required");
       }
       dest = yield _createExtractFolder(dest);
-      core5.debug("Checking tar --version");
+      core.debug("Checking tar --version");
       let versionOutput = "";
       yield exec_1.exec("tar --version", [], {
         ignoreReturnCode: true,
@@ -3552,7 +3552,7 @@ var require_tool_cache = __commonJS((exports2) => {
           stderr: (data) => versionOutput += data.toString()
         }
       });
-      core5.debug(versionOutput.trim());
+      core.debug(versionOutput.trim());
       const isGnuTar = versionOutput.toUpperCase().includes("GNU TAR");
       let args;
       if (flags instanceof Array) {
@@ -3560,7 +3560,7 @@ var require_tool_cache = __commonJS((exports2) => {
       } else {
         args = [flags];
       }
-      if (core5.isDebug() && !flags.includes("v")) {
+      if (core.isDebug() && !flags.includes("v")) {
         args.push("-v");
       }
       let destArg = dest;
@@ -3591,10 +3591,10 @@ var require_tool_cache = __commonJS((exports2) => {
         args = [flags];
       }
       args.push("-x", "-C", dest, "-f", file);
-      if (core5.isDebug()) {
+      if (core.isDebug()) {
         args.push("-v");
       }
-      const xarPath = yield io2.which("xar", true);
+      const xarPath = yield io.which("xar", true);
       yield exec_1.exec(`"${xarPath}"`, _unique(args));
       return dest;
     });
@@ -3620,7 +3620,7 @@ var require_tool_cache = __commonJS((exports2) => {
       const escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, "");
       const escapedDest = dest.replace(/'/g, "''").replace(/"|\n|\r/g, "");
       const command = `$ErrorActionPreference = 'Stop' ; try { Add-Type -AssemblyName System.IO.Compression.FileSystem } catch { } ; [System.IO.Compression.ZipFile]::ExtractToDirectory('${escapedFile}', '${escapedDest}')`;
-      const powershellPath = yield io2.which("powershell", true);
+      const powershellPath = yield io.which("powershell", true);
       const args = [
         "-NoLogo",
         "-Sta",
@@ -3636,9 +3636,9 @@ var require_tool_cache = __commonJS((exports2) => {
   }
   function extractZipNix(file, dest) {
     return __awaiter(this, void 0, void 0, function* () {
-      const unzipPath = yield io2.which("unzip", true);
+      const unzipPath = yield io.which("unzip", true);
       const args = [file];
-      if (!core5.isDebug()) {
+      if (!core.isDebug()) {
         args.unshift("-q");
       }
       yield exec_1.exec(`"${unzipPath}"`, args, {cwd: dest});
@@ -3648,15 +3648,15 @@ var require_tool_cache = __commonJS((exports2) => {
     return __awaiter(this, void 0, void 0, function* () {
       version = semver.clean(version) || version;
       arch = arch || os.arch();
-      core5.debug(`Caching tool ${tool} ${version} ${arch}`);
-      core5.debug(`source dir: ${sourceDir}`);
+      core.debug(`Caching tool ${tool} ${version} ${arch}`);
+      core.debug(`source dir: ${sourceDir}`);
       if (!fs.statSync(sourceDir).isDirectory()) {
         throw new Error("sourceDir is not a directory");
       }
       const destPath = yield _createToolPath(tool, version, arch);
       for (const itemName of fs.readdirSync(sourceDir)) {
         const s = path.join(sourceDir, itemName);
-        yield io2.cp(s, destPath, {recursive: true});
+        yield io.cp(s, destPath, {recursive: true});
       }
       _completeToolPath(tool, version, arch);
       return destPath;
@@ -3667,15 +3667,15 @@ var require_tool_cache = __commonJS((exports2) => {
     return __awaiter(this, void 0, void 0, function* () {
       version = semver.clean(version) || version;
       arch = arch || os.arch();
-      core5.debug(`Caching tool ${tool} ${version} ${arch}`);
-      core5.debug(`source file: ${sourceFile}`);
+      core.debug(`Caching tool ${tool} ${version} ${arch}`);
+      core.debug(`source file: ${sourceFile}`);
       if (!fs.statSync(sourceFile).isFile()) {
         throw new Error("sourceFile is not a file");
       }
       const destFolder = yield _createToolPath(tool, version, arch);
       const destPath = path.join(destFolder, targetFile);
-      core5.debug(`destination file ${destPath}`);
-      yield io2.cp(sourceFile, destPath);
+      core.debug(`destination file ${destPath}`);
+      yield io.cp(sourceFile, destPath);
       _completeToolPath(tool, version, arch);
       return destFolder;
     });
@@ -3698,12 +3698,12 @@ var require_tool_cache = __commonJS((exports2) => {
     if (versionSpec) {
       versionSpec = semver.clean(versionSpec) || "";
       const cachePath = path.join(_getCacheDirectory(), toolName, versionSpec, arch);
-      core5.debug(`checking cache: ${cachePath}`);
+      core.debug(`checking cache: ${cachePath}`);
       if (fs.existsSync(cachePath) && fs.existsSync(`${cachePath}.complete`)) {
-        core5.debug(`Found tool in cache ${toolName} ${versionSpec} ${arch}`);
+        core.debug(`Found tool in cache ${toolName} ${versionSpec} ${arch}`);
         toolPath = cachePath;
       } else {
-        core5.debug("not found");
+        core.debug("not found");
       }
     }
     return toolPath;
@@ -3734,7 +3734,7 @@ var require_tool_cache = __commonJS((exports2) => {
       const http = new httpm.HttpClient("tool-cache");
       const headers = {};
       if (auth) {
-        core5.debug("set auth");
+        core.debug("set auth");
         headers.authorization = auth;
       }
       const response = yield http.getJson(treeUrl, headers);
@@ -3755,7 +3755,7 @@ var require_tool_cache = __commonJS((exports2) => {
         try {
           releases = JSON.parse(versionsRaw);
         } catch (_a) {
-          core5.debug("Invalid json");
+          core.debug("Invalid json");
         }
       }
       return releases;
@@ -3774,18 +3774,18 @@ var require_tool_cache = __commonJS((exports2) => {
       if (!dest) {
         dest = path.join(_getTempDirectory(), v4_1.default());
       }
-      yield io2.mkdirP(dest);
+      yield io.mkdirP(dest);
       return dest;
     });
   }
   function _createToolPath(tool, version, arch) {
     return __awaiter(this, void 0, void 0, function* () {
       const folderPath = path.join(_getCacheDirectory(), tool, semver.clean(version) || version, arch || "");
-      core5.debug(`destination ${folderPath}`);
+      core.debug(`destination ${folderPath}`);
       const markerPath = `${folderPath}.complete`;
-      yield io2.rmRF(folderPath);
-      yield io2.rmRF(markerPath);
-      yield io2.mkdirP(folderPath);
+      yield io.rmRF(folderPath);
+      yield io.rmRF(markerPath);
+      yield io.mkdirP(folderPath);
       return folderPath;
     });
   }
@@ -3793,18 +3793,18 @@ var require_tool_cache = __commonJS((exports2) => {
     const folderPath = path.join(_getCacheDirectory(), tool, semver.clean(version) || version, arch || "");
     const markerPath = `${folderPath}.complete`;
     fs.writeFileSync(markerPath, "");
-    core5.debug("finished caching tool");
+    core.debug("finished caching tool");
   }
   function _isExplicitVersion(versionSpec) {
     const c = semver.clean(versionSpec) || "";
-    core5.debug(`isExplicit: ${c}`);
+    core.debug(`isExplicit: ${c}`);
     const valid = semver.valid(c) != null;
-    core5.debug(`explicit? ${valid}`);
+    core.debug(`explicit? ${valid}`);
     return valid;
   }
   function _evaluateVersions(versions, versionSpec) {
     let version = "";
-    core5.debug(`evaluating ${versions.length} versions`);
+    core.debug(`evaluating ${versions.length} versions`);
     versions = versions.sort((a, b) => {
       if (semver.gt(a, b)) {
         return 1;
@@ -3820,9 +3820,9 @@ var require_tool_cache = __commonJS((exports2) => {
       }
     }
     if (version) {
-      core5.debug(`matched: ${version}`);
+      core.debug(`matched: ${version}`);
     } else {
-      core5.debug("match not found");
+      core.debug("match not found");
     }
     return version;
   }
@@ -3846,107 +3846,120 @@ var require_tool_cache = __commonJS((exports2) => {
 });
 
 // src/main.ts
-var core4 = __toModule(require_core());
+var import_core5 = __toModule(require_core());
 
-// src/config.ts
-var core2 = __toModule(require_core());
+// src/configure.ts
+var import_core2 = __toModule(require_core());
 
-// src/utils/input.ts
-var core = __toModule(require_core());
-var Input = class {
-  static has(name) {
-    const actual = core.getInput(name);
-    return actual !== "";
+// src/utils/ifInput.ts
+var import_core = __toModule(require_core());
+
+// src/utils/infer.ts
+var infer_default = (val) => {
+  if (val === "") {
+    return null;
+  } else if (val.match(/^\d+$/)) {
+    return parseInt(val, 10);
+  } else if (val.match(/^0x[0-9a-fA-F]+$/)) {
+    return parseInt(val, 16);
+  } else if (val.match(/^\d+\.\d*$/) || val.match(/^\d*\.\d+/)) {
+    return parseFloat(val);
+  } else if (val.match(/^null$/i)) {
+    return null;
+  } else if (val.match(/^undefined$/i)) {
+    return void 0;
+  } else if (val.match(/^true$/i)) {
+    return true;
+  } else if (val.match(/^false$/i)) {
+    return false;
   }
-  static get(name, defaultV = "") {
-    return Input.has(name) ? core.getInput(name) : defaultV;
-  }
-  static whenHas(name, callback) {
-    if (!Input.has(name)) {
-      return;
-    }
-    callback(Input.get(name));
+  return val;
+};
+
+// src/utils/ifInput.ts
+var ifInput_default = (name, callback) => {
+  const val = infer_default(import_core.getInput(name));
+  if (val !== null && val !== void 0) {
+    callback(val);
   }
 };
 
-// src/config.ts
-var Config = class {
-  static setupEnvironmentVariables() {
-    Input.whenHas("url", (url) => {
-      core2.exportVariable("SENTRY_URL", url);
-    });
-    Input.whenHas("token", (token) => {
-      core2.setSecret(token);
-      core2.exportVariable("SENTRY_AUTH_TOKEN", token);
-    });
-    Input.whenHas("organization", (organization) => {
-      core2.exportVariable("SENTRY_ORG", organization);
-    });
-    Input.whenHas("project", (project) => {
-      core2.exportVariable("SENTRY_PROJECT", project);
-    });
-  }
+// src/configure.ts
+var configure_default = () => {
+  ifInput_default("url", (url) => import_core2.exportVariable("SENTRY_URL", url));
+  ifInput_default("token", (token) => {
+    import_core2.setSecret(token);
+    import_core2.exportVariable("SENTRY_AUTH_TOKEN", token);
+  });
+  ifInput_default("organization", (organization) => import_core2.exportVariable("SENTRY_ORG", organization));
+  ifInput_default("project", (project) => import_core2.exportVariable("SENTRY_PROJECT", project));
 };
 
 // src/download.ts
-var core3 = __toModule(require_core());
-var exec = __toModule(require_exec());
-var io = __toModule(require_io());
-var tc = __toModule(require_tool_cache());
+var import_core4 = __toModule(require_core());
+var import_exec = __toModule(require_exec());
+var import_io = __toModule(require_io());
+var import_tool_cache = __toModule(require_tool_cache());
 var import_fs = __toModule(require("fs"));
 var import_path = __toModule(require("path"));
-var Download = class {
-  static getSentryLink() {
-    const version = Input.get("version", "latest");
-    core3.info(`Detected platform: ${process.platform}`);
-    core3.info(`Downloading sentry-cli version ${version}`);
-    switch (process.platform) {
-      case "linux":
-        return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
-      case "darwin":
-        return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
-      case "win32":
-        return `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
-      default:
-        throw new Error(`Unsupported platform: ${process.platform}`);
-    }
+
+// src/utils/inferInput.ts
+var import_core3 = __toModule(require_core());
+var inferInput_default = (name, defaultV = null) => {
+  var _a;
+  return (_a = infer_default(import_core3.getInput(name))) != null ? _a : defaultV;
+};
+
+// src/download.ts
+var download_default = async () => {
+  var _a, _b;
+  const version = inferInput_default("version", "latest");
+  import_core4.info(`Detected platform: ${process.platform}`);
+  import_core4.info(`Downloading sentry-cli version ${version}`);
+  let downloadLink;
+  switch (process.platform) {
+    case "linux":
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
+      break;
+    case "darwin":
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
+      break;
+    case "win32":
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
+      break;
+    default:
+      throw new Error(`Unsupported platform: ${process.platform}`);
   }
-  static async download() {
-    var _a, _b;
-    const downloadPath = await tc.downloadTool(Download.getSentryLink());
-    let destinationPath;
-    core3.info(`Download path: ${downloadPath}`);
-    const root = process.platform === "win32" ? "C:\\" : "/";
-    const home = (_b = (_a = process.env.HOME) != null ? _a : process.env.HOMEPATH) != null ? _b : root;
-    const binDir = import_path.resolve(home, "tools", "sentry-cli", "bin");
-    core3.debug(`Home directory: ${home}`);
-    core3.debug(`Installation directory: ${binDir}`);
-    if (!import_fs.existsSync(binDir)) {
-      await io.mkdirP(binDir);
-    }
-    destinationPath = import_path.resolve(binDir, "sentry-cli");
-    switch (process.platform) {
-      case "linux":
-      case "darwin":
-        await exec.exec("chmod", ["+x", downloadPath]);
-        break;
-      case "win32":
-        destinationPath += ".exe";
-    }
-    import_fs.copyFileSync(downloadPath, destinationPath);
-    import_fs.unlinkSync(downloadPath);
-    core3.info(`sentry-cli executable has been installed in ${destinationPath}`);
-    core3.addPath(binDir);
+  const downloadPath = await import_tool_cache.downloadTool(downloadLink);
+  let destinationPath;
+  import_core4.info(`Download path: ${downloadPath}`);
+  const root = process.platform === "win32" ? "C:\\" : "/";
+  const home = (_b = (_a = process.env.HOME) != null ? _a : process.env.HOMEPATH) != null ? _b : root;
+  const binDir = import_path.resolve(home, "tools", "sentry-cli", "bin");
+  import_core4.debug(`Home directory: ${home}`);
+  import_core4.debug(`Installation directory: ${binDir}`);
+  if (!import_fs.existsSync(binDir)) {
+    await import_io.mkdirP(binDir);
   }
+  destinationPath = import_path.resolve(binDir, "sentry-cli");
+  switch (process.platform) {
+    case "linux":
+    case "darwin":
+      await import_exec.exec("chmod", ["+x", downloadPath]);
+      break;
+    case "win32":
+      destinationPath += ".exe";
+  }
+  import_fs.copyFileSync(downloadPath, destinationPath);
+  import_fs.unlinkSync(downloadPath);
+  import_core4.info(`sentry-cli executable has been installed in ${destinationPath}`);
+  import_core4.addPath(binDir);
 };
 
 // src/main.ts
-(async () => {
-  try {
-    await Download.download();
-    Config.setupEnvironmentVariables();
-  } catch (e) {
-    core4.setFailed(e);
-  }
-})();
+async function main() {
+  await configure_default();
+  await download_default();
+}
+main().catch((e) => import_core5.setFailed(e));
 //# sourceMappingURL=index.js.map

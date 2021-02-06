@@ -1,10 +1,43 @@
 name: Tests
-on: push
+on:
+  push:
+    branches: [ main, v*-dev ]
+  pull_request:
+    types: [ opened, synchronize, reopened ]
 jobs:
+  lint:
+    name: Lint with ESLint / Prettier
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install NPM dependencies
+        run: npm install
+      - name: Run ESLint
+        run: npm run lint
+#  sonarcloud:
+#    name: SonarCloud
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
+#      - name: Patch sonar.properties
+#        run: sed -i s/\$VERSION/$(jq -r .version package.json)/ sonar-project.properties
+#      - name: SonarCloud Scan
+#        uses: SonarSource/sonarcloud-github-action@v1.5
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   test:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, macos-10.15, windows-2019 ]
         version: [latest, 1.49.0]
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -20,7 +53,7 @@ jobs:
         with:
           version: ${{ matrix.version }}
           url: ${{ secrets.SENTRY_URL }}
-          token: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          token: ${{ secrets.SENTRY_TOKEN }}
           organization: ${{ secrets.SENTRY_ORGANIZATION }}
           project: ${{ secrets.SENTRY_PROJECT }}
       - name: Display Sentry CLI info
@@ -28,9 +61,9 @@ jobs:
           sentry-cli --help
           sentry-cli info
       - name: Make release
-        if: contains(matrix.os, 'ubuntu') && matrix.version == 'latest'  # do not duplicate releases
+        if: matrix.os == 'ubuntu-20.04' && matrix.version == 'latest'  # do not duplicate releases
         run: |
-          VERSION=`sentry-cli releases propose-version`
+          VERSION=$(sentry-cli releases propose-version)
           sentry-cli releases new "$VERSION"
           sentry-cli releases set-commits "$VERSION" --auto
           sentry-cli releases files "$VERSION" upload-sourcemaps ./dist \
@@ -41,7 +74,7 @@ jobs:
             --strip-common-prefix
           sentry-cli releases finalize "$VERSION"
       - name: Send test event
-        if: contains(matrix.os, 'ubuntu') && matrix.version == 'latest'  # do not duplicate events
+        if: matrix.os == 'ubuntu-20.04' && matrix.version == 'latest'  # do not duplicate events
         run: |
           export SENTRY_DSN=${{ secrets.SENTRY_DSN }}
           sentry-cli send-event -m "Hello from GitHub Actions"
