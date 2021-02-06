@@ -3920,11 +3920,11 @@ var download_default = async () => {
   switch (process.platform) {
     case "linux":
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
-      binDir = import_path.join("usr", "local", "bin");
+      binDir = import_path.join("/usr", "local", "bin");
       break;
     case "darwin":
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
-      binDir = import_path.join("usr", "local", "bin");
+      binDir = import_path.join("/usr", "local", "bin");
       break;
     case "win32":
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
@@ -3933,7 +3933,7 @@ var download_default = async () => {
     default:
       throw new Error(`Unsupported platform: ${process.platform}`);
   }
-  const destinationPath = import_path.resolve(binDir, "sentry-cli") + (process.platform === "win32" ? ".exex" : "");
+  const destinationPath = import_path.resolve(binDir, "sentry-cli") + (process.platform === "win32" ? ".exe" : "");
   import_core4.info(`Installation directory: ${binDir}`);
   const downloadPath = await import_tool_cache.downloadTool(downloadLink, binDir);
   import_core4.info(`Download path: ${downloadPath}`);

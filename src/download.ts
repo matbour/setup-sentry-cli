@@ -16,11 +16,11 @@ export default async (): Promise<void> => {
   switch (process.platform) {
     case 'linux':
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
-      binDir = join('usr', 'local', 'bin');
+      binDir = join('/usr', 'local', 'bin');
       break;
     case 'darwin':
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
-      binDir = join('usr', 'local', 'bin');
+      binDir = join('/usr', 'local', 'bin');
       break;
     case 'win32':
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
@@ -30,7 +30,7 @@ export default async (): Promise<void> => {
       throw new Error(`Unsupported platform: ${process.platform}`);
   }
 
-  const destinationPath = resolve(binDir, 'sentry-cli') + (process.platform === 'win32' ? '.exex' : '');
+  const destinationPath = resolve(binDir, 'sentry-cli') + (process.platform === 'win32' ? '.exe' : '');
   info(`Installation directory: ${binDir}`);
 
   const downloadPath = await downloadTool(downloadLink, binDir);
