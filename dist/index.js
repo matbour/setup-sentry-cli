@@ -3935,7 +3935,7 @@ var download_default = async () => {
   }
   const destinationPath = import_path.resolve(binDir, "sentry-cli") + (process.platform === "win32" ? ".exe" : "");
   import_core4.info(`Installation directory: ${binDir}`);
-  const downloadPath = await import_tool_cache.downloadTool(downloadLink, binDir);
+  const downloadPath = await import_tool_cache.downloadTool(downloadLink, destinationPath);
   import_core4.info(`Download path: ${downloadPath}`);
   if (!import_fs.existsSync(binDir)) {
     await import_io.mkdirP(binDir);
@@ -3947,7 +3947,6 @@ var download_default = async () => {
       break;
   }
   import_fs.copyFileSync(downloadPath, destinationPath);
-  import_fs.unlinkSync(downloadPath);
   import_core4.addPath(binDir);
   import_core4.info(`sentry-cli executable has been installed in ${destinationPath}`);
 };

@@ -33,7 +33,7 @@ export default async (): Promise<void> => {
   const destinationPath = resolve(binDir, 'sentry-cli') + (process.platform === 'win32' ? '.exe' : '');
   info(`Installation directory: ${binDir}`);
 
-  const downloadPath = await downloadTool(downloadLink, binDir);
+  const downloadPath = await downloadTool(downloadLink, destinationPath);
   info(`Download path: ${downloadPath}`);
 
   // Create the installation directory if needed
@@ -51,7 +51,7 @@ export default async (): Promise<void> => {
 
   // Move to destination path
   copyFileSync(downloadPath, destinationPath);
-  unlinkSync(downloadPath);
+  // unlinkSync(downloadPath);
   addPath(binDir);
 
   info(`sentry-cli executable has been installed in ${destinationPath}`);
