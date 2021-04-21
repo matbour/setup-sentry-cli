@@ -13,7 +13,6 @@ var __commonJS = (callback, module2) => () => {
   return module2.exports;
 };
 var __exportStar = (target, module2, desc) => {
-  __markAsModule(target);
   if (module2 && typeof module2 === "object" || typeof module2 === "function") {
     for (let key of __getOwnPropNames(module2))
       if (!__hasOwnProp.call(target, key) && key !== "default")
@@ -22,9 +21,7 @@ var __exportStar = (target, module2, desc) => {
   return target;
 };
 var __toModule = (module2) => {
-  if (module2 && module2.__esModule)
-    return module2;
-  return __exportStar(__defProp(module2 != null ? __create(__getProtoOf(module2)) : {}, "default", {value: module2, enumerable: true}), module2);
+  return __exportStar(__markAsModule(__defProp(module2 != null ? __create(__getProtoOf(module2)) : {}, "default", module2 && module2.__esModule && "default" in module2 ? {get: () => module2.default, enumerable: true} : {value: module2, enumerable: true})), module2);
 };
 
 // node_modules/@actions/core/lib/utils.js
@@ -233,6 +230,7 @@ var require_core = __commonJS((exports2) => {
   }
   exports2.getInput = getInput3;
   function setOutput(name, value) {
+    process.stdout.write(os.EOL);
     command_1.issueCommand("set-output", {name}, value);
   }
   exports2.setOutput = setOutput;
@@ -326,11 +324,23 @@ var require_io_util = __commonJS((exports2) => {
       step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
   };
+  var __importStar = exports2 && exports2.__importStar || function(mod) {
+    if (mod && mod.__esModule)
+      return mod;
+    var result = {};
+    if (mod != null) {
+      for (var k in mod)
+        if (Object.hasOwnProperty.call(mod, k))
+          result[k] = mod[k];
+    }
+    result["default"] = mod;
+    return result;
+  };
   var _a;
   Object.defineProperty(exports2, "__esModule", {value: true});
   var assert_1 = require("assert");
-  var fs = require("fs");
-  var path = require("path");
+  var fs = __importStar(require("fs"));
+  var path = __importStar(require("path"));
   _a = fs.promises, exports2.chmod = _a.chmod, exports2.copyFile = _a.copyFile, exports2.lstat = _a.lstat, exports2.mkdir = _a.mkdir, exports2.readdir = _a.readdir, exports2.readlink = _a.readlink, exports2.rename = _a.rename, exports2.rmdir = _a.rmdir, exports2.stat = _a.stat, exports2.symlink = _a.symlink, exports2.unlink = _a.unlink;
   exports2.IS_WINDOWS = process.platform === "win32";
   function exists(fsPath) {
@@ -498,11 +508,23 @@ var require_io = __commonJS((exports2) => {
       step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
   };
+  var __importStar = exports2 && exports2.__importStar || function(mod) {
+    if (mod && mod.__esModule)
+      return mod;
+    var result = {};
+    if (mod != null) {
+      for (var k in mod)
+        if (Object.hasOwnProperty.call(mod, k))
+          result[k] = mod[k];
+    }
+    result["default"] = mod;
+    return result;
+  };
   Object.defineProperty(exports2, "__esModule", {value: true});
-  var childProcess = require("child_process");
-  var path = require("path");
+  var childProcess = __importStar(require("child_process"));
+  var path = __importStar(require("path"));
   var util_1 = require("util");
-  var ioUtil = require_io_util();
+  var ioUtil = __importStar(require_io_util());
   var exec2 = util_1.promisify(childProcess.exec);
   function cp(source, dest, options = {}) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -609,47 +631,58 @@ var require_io = __commonJS((exports2) => {
             throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also check the file mode to verify the file is executable.`);
           }
         }
+        return result;
       }
-      try {
-        const extensions = [];
-        if (ioUtil.IS_WINDOWS && process.env.PATHEXT) {
-          for (const extension of process.env.PATHEXT.split(path.delimiter)) {
-            if (extension) {
-              extensions.push(extension);
-            }
-          }
-        }
-        if (ioUtil.isRooted(tool)) {
-          const filePath = yield ioUtil.tryGetExecutablePath(tool, extensions);
-          if (filePath) {
-            return filePath;
-          }
-          return "";
-        }
-        if (tool.includes("/") || ioUtil.IS_WINDOWS && tool.includes("\\")) {
-          return "";
-        }
-        const directories = [];
-        if (process.env.PATH) {
-          for (const p of process.env.PATH.split(path.delimiter)) {
-            if (p) {
-              directories.push(p);
-            }
-          }
-        }
-        for (const directory of directories) {
-          const filePath = yield ioUtil.tryGetExecutablePath(directory + path.sep + tool, extensions);
-          if (filePath) {
-            return filePath;
-          }
-        }
-        return "";
-      } catch (err) {
-        throw new Error(`which failed with message ${err.message}`);
+      const matches = yield findInPath(tool);
+      if (matches && matches.length > 0) {
+        return matches[0];
       }
+      return "";
     });
   }
   exports2.which = which;
+  function findInPath(tool) {
+    return __awaiter(this, void 0, void 0, function* () {
+      if (!tool) {
+        throw new Error("parameter 'tool' is required");
+      }
+      const extensions = [];
+      if (ioUtil.IS_WINDOWS && process.env["PATHEXT"]) {
+        for (const extension of process.env["PATHEXT"].split(path.delimiter)) {
+          if (extension) {
+            extensions.push(extension);
+          }
+        }
+      }
+      if (ioUtil.isRooted(tool)) {
+        const filePath = yield ioUtil.tryGetExecutablePath(tool, extensions);
+        if (filePath) {
+          return [filePath];
+        }
+        return [];
+      }
+      if (tool.includes(path.sep)) {
+        return [];
+      }
+      const directories = [];
+      if (process.env.PATH) {
+        for (const p of process.env.PATH.split(path.delimiter)) {
+          if (p) {
+            directories.push(p);
+          }
+        }
+      }
+      const matches = [];
+      for (const directory of directories) {
+        const filePath = yield ioUtil.tryGetExecutablePath(path.join(directory, tool), extensions);
+        if (filePath) {
+          matches.push(filePath);
+        }
+      }
+      return matches;
+    });
+  }
+  exports2.findInPath = findInPath;
   function readCopyOptions(options) {
     const force = options.force == null ? true : options.force;
     const recursive = Boolean(options.recursive);
@@ -3101,7 +3134,9 @@ var require_http_client = __commonJS((exports2) => {
           maxSockets,
           keepAlive: this._keepAlive,
           proxy: {
-            proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`,
+            ...(proxyUrl.username || proxyUrl.password) && {
+              proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
+            },
             host: proxyUrl.hostname,
             port: proxyUrl.port
           }
@@ -3851,22 +3886,22 @@ var import_core3 = __toModule(require_core());
 // src/configure.ts
 var import_core = __toModule(require_core());
 var configure_default = () => {
-  const url = import_core.getInput("url");
+  const url = (0, import_core.getInput)("url");
   if (url !== "") {
-    import_core.exportVariable("SENTRY_URL", url);
+    (0, import_core.exportVariable)("SENTRY_URL", url);
   }
-  const token = import_core.getInput("token");
+  const token = (0, import_core.getInput)("token");
   if (token !== "") {
-    import_core.exportVariable("SENTRY_AUTH_TOKEN", import_core.getInput("token"));
-    import_core.setSecret(token);
+    (0, import_core.exportVariable)("SENTRY_AUTH_TOKEN", (0, import_core.getInput)("token"));
+    (0, import_core.setSecret)(token);
   }
-  const organization = import_core.getInput("organization");
+  const organization = (0, import_core.getInput)("organization");
   if (organization !== "") {
-    import_core.exportVariable("SENTRY_ORG", organization);
+    (0, import_core.exportVariable)("SENTRY_ORG", organization);
   }
-  const project = import_core.getInput("project");
+  const project = (0, import_core.getInput)("project");
   if (project !== "") {
-    import_core.exportVariable("SENTRY_PROJECT", project);
+    (0, import_core.exportVariable)("SENTRY_PROJECT", project);
   }
 };
 
@@ -3878,47 +3913,47 @@ var import_tool_cache = __toModule(require_tool_cache());
 var import_fs = __toModule(require("fs"));
 var import_path = __toModule(require("path"));
 var download_default = async () => {
-  const version = import_core2.getInput("version");
-  import_core2.debug(`Detected platform: ${process.platform}`);
-  import_core2.info(`Installing sentry-cli version ${version}`);
+  const version = (0, import_core2.getInput)("version");
+  (0, import_core2.debug)(`Detected platform: ${process.platform}`);
+  (0, import_core2.info)(`Installing sentry-cli version ${version}`);
   let downloadLink;
   let binDir;
   switch (process.platform) {
     case "linux":
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
-      binDir = import_path.join("/usr", "local", "bin");
+      binDir = (0, import_path.join)("/usr", "local", "bin");
       break;
     case "darwin":
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
-      binDir = import_path.join("/usr", "local", "bin");
+      binDir = (0, import_path.join)("/usr", "local", "bin");
       break;
     case "win32":
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
-      binDir = import_path.join("C:\\", "Program Files", "sentry-cli");
+      binDir = (0, import_path.join)("C:\\", "Program Files", "sentry-cli");
       break;
     default:
       throw new Error(`Unsupported platform: ${process.platform}`);
   }
-  const destinationPath = import_path.resolve(binDir, "sentry-cli") + (process.platform === "win32" ? ".exe" : "");
-  import_core2.debug(`Installation directory: ${binDir}`);
-  import_core2.debug(`Downloading from: ${downloadLink}`);
-  const downloadPath = await import_tool_cache.downloadTool(downloadLink);
-  import_core2.debug(`Download path: ${downloadPath}`);
-  if (!import_fs.existsSync(binDir)) {
-    await import_io.mkdirP(binDir);
+  const destinationPath = (0, import_path.resolve)(binDir, "sentry-cli") + (process.platform === "win32" ? ".exe" : "");
+  (0, import_core2.debug)(`Installation directory: ${binDir}`);
+  (0, import_core2.debug)(`Downloading from: ${downloadLink}`);
+  const downloadPath = await (0, import_tool_cache.downloadTool)(downloadLink);
+  (0, import_core2.debug)(`Download path: ${downloadPath}`);
+  if (!(0, import_fs.existsSync)(binDir)) {
+    await (0, import_io.mkdirP)(binDir);
   }
   switch (process.platform) {
     case "linux":
     case "darwin":
-      await import_exec.exec("sudo", ["cp", downloadPath, destinationPath]);
-      await import_exec.exec("sudo", ["chmod", "+x", destinationPath]);
+      await (0, import_exec.exec)("sudo", ["cp", downloadPath, destinationPath]);
+      await (0, import_exec.exec)("sudo", ["chmod", "+x", destinationPath]);
       break;
     case "win32":
-      import_fs.copyFileSync(downloadPath, destinationPath);
+      (0, import_fs.copyFileSync)(downloadPath, destinationPath);
       break;
   }
-  import_core2.addPath(binDir);
-  import_core2.info(`sentry-cli executable has been installed in ${destinationPath}`);
+  (0, import_core2.addPath)(binDir);
+  (0, import_core2.info)(`sentry-cli executable has been installed in ${destinationPath}`);
 };
 
 // src/main.ts
@@ -3926,5 +3961,5 @@ async function main() {
   configure_default();
   await download_default();
 }
-main().catch((e) => import_core3.setFailed(e));
+main().catch((e) => (0, import_core3.setFailed)(e));
 //# sourceMappingURL=index.js.map

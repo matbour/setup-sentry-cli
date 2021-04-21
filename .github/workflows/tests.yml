@@ -14,28 +14,13 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v1
         with:
-          node-version: '12'
+          node-version: '15'
       - name: Install NPM dependencies
         run: npm install
       - name: Run ESLint
         run: npm run lint
       - name: Run TypeCheck
         run: npm run typecheck
-  sonarcloud:
-    name: SonarCloud
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Patch sonar.properties
-        run: sed -i s/\$VERSION/$(jq -r .version package.json)/ sonar-project.properties
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v1.5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   test:
     name: Test Sentry Integration
     strategy:
