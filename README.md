@@ -11,16 +11,15 @@ Install the Sentry CLI in your GitHub Actions workflow.
 
 Proudly maintained by [Mathieu Bour][@mathieu-bour], former Vice-CTO [@mathrix-education][@mathrix-education].
 
-
 ## Acknowledgements
-This action was initially developed for [Education Media SA][@mathrix-education].
-The repository is now maintained by [@mathieu-bour][@mathieu-bour].
+
+This action was initially developed for [Education Media SA][@mathrix-education]. The repository is now maintained
+by [@mathieu-bour][@mathieu-bour].
 
 ## Motivations
-Installing Sentry CLI in GitHub Actions can be relevant in many cases.
-Mathrix Education SA is based on Angular, which produces sourcemaps.
-Therefore, we need to upload sourcemaps, during our compilation
-workflow.
+
+Installing Sentry CLI in GitHub Actions can be relevant in many cases. Mathrix Education SA is based on Angular, which
+produces sourcemaps. Therefore, we need to upload sourcemaps, during our compilation workflow.
 
 There is an [official guide to use sentry-cli on the Sentry's blog][2.1], but it requires to use a bunch of commands,
 which is not really straight forward.
@@ -28,13 +27,15 @@ which is not really straight forward.
 There are also some [Docker-based actions][2.2], but they are quite slow.
 
 [2.1]: https://blog.sentry.io/2019/12/17/using-github-actions-to-create-sentry-releases
+
 [2.2]: https://github.com/marketplace?type=actions&query=sentry
 
-
 ## Usage
+
 ### Supported operating systems
-This action currently supports Ubuntu, Windows and Mac-OS based systems.
-The supported operating system matrix is the following:
+
+This action currently supports Ubuntu, Windows and Mac-OS based systems. The supported operating system matrix is the
+following:
 
 | Operating system | Status       |
 |------------------|--------------|
@@ -42,8 +43,8 @@ The supported operating system matrix is the following:
 | `macos-latest`   | ![supported] |
 | `windows-latest` | ![supported] |
 
-
 ### Inputs
+
 | Name           | Type                  | Default value |
 |----------------|-----------------------|---------------|
 | `version`      | `'latest'` / `string` | `'latest'`    |
@@ -55,34 +56,62 @@ The supported operating system matrix is the following:
 See [action.yml](action.yml) for details.
 
 #### `version`
-If you need a precise version of the Sentry CLI, you may provide this input.
-We strongly advise you to do so since using the latest version may break your workflow if Sentry releases a
-backward-incompatible version of the sentry-cli.
+
+If you need a precise version of the Sentry CLI, you may provide this input. We strongly advise you to do so since using
+the latest version may break your workflow if Sentry releases a backward-incompatible version of the sentry-cli.
 
 #### `url`
-The Sentry server URL. By default, this action will configure the Sentry CLI to interact with official Sentry server which is
-`https://sentry.io`.
-If you use an on-premise instance, you may provide your server URL here.
+
+The Sentry server URL. By default, this action will configure the Sentry CLI to interact with official Sentry server
+which is
+`https://sentry.io`. If you use an on-premise instance, you may provide your server URL here.
 
 #### `token`
-This is the token which will be used by the Sentry CLI to authenticate against the Sentry server.
-You may generate it on your personal account page or by creating an internal integration for your organization with
-`Release: Admin` and `Organization: Read` permissions.
+
+This is the token which will be used by the Sentry CLI to authenticate against the Sentry server. Actually, this will
+export the `SENTRY_AUTH_TOKEN` environment variable, so the sentry-cli already can log into the server.
+
+##### Organization Internal Integration (recommended)
+
+This will generate a token that is tied to your organization. Go to Organization Settings > Developer Settings > + New
+Internal Integration. Fill the `Name` with a name of your choice (for example `GitHub Actions`); you will get a token
+that you can use a Sentry token.
+
+If you plan to use this action to deploy releases, set the following permissions:
+
+| Name          | Access    |
+|---------------|-----------|
+| Project       | No Access |
+| Release       | Admin     |
+| Issue & Event | No Access |
+| Organization  | Read      |
+| Member        | No Access |
+
+##### Personal token
+
+You can also create personal access token that are tied to your account and use them to impersonate your account. Simply
+go to Settings > API Keys > Create Next Token.
 
 #### `organization`
-Define the default organization.
+
+Define the default organization; this will export the `SENTRY_ORG` environment variable.
 
 #### `project`
-Define the default project.
+
+Define the default project; this will export the `SENTRY_PROJECT` environment variable.
 
 ## Examples
+
 ### Minimal configuration
+
 ```yaml
 - uses: mathieu-bour/setup-sentry-cli@main  # WARNING: see the latest stable version instead!
 ```
+
 By default, this minimal example will install the latest version of the Sentry CLI, without any authentication.
 
 ### Typical CI configuration
+
 ```yaml
 - name: Setup Sentry CLI
   uses: mathieu-bour/setup-sentry-cli@1.1.0
@@ -94,8 +123,8 @@ By default, this minimal example will install the latest version of the Sentry C
     project: my-project
 ```
 
-In this example, you provide an authentication token.
-The action automatically download the latest version of the Sentry CLI and authenticate using the provided token.
+In this example, you provide an authentication token. The action automatically download the latest version of the Sentry
+CLI and authenticate using the provided token.
 
 Then, the CLI is configured for the server `https://sentry.yourcompany.com` and the project `my-project` of the
 organization `my-org`.
@@ -103,13 +132,18 @@ organization `my-org`.
 You are now ready to use the Sentry CLI commands such as `sentry-cli releases`!
 
 [@mathieu-bour]: https://github.com/mathieu-bour
+
 [@mathrix-education]: https://github.com/mathrix-education
 
 [actions-secrets]: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets
 
 [license]: https://img.shields.io/github/license/mathieu-bour/setup-sentry-cli?style=flat-square
+
 [stars]: https://img.shields.io/github/stars/mathieu-bour/setup-sentry-cli?style=flat-square
+
 [latest-release]: https://img.shields.io/github/v/release/mathieu-bour/setup-sentry-cli?label=latest%20release&style=flat-square
+
 [workflow]: https://img.shields.io/github/workflow/status/mathieu-bour/setup-sentry-cli/Tests?style=flat-square
+
 [supported]: https://img.shields.io/badge/status-supported-brightgreen?style=flat-square
 
