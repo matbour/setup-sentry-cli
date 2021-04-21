@@ -34,10 +34,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Setup Node.js 12
-        uses: actions/setup-node@v1
-        with:
-          node-version: 12.x
       - name: Install Sentry CLI
         uses: ./
         with:
@@ -50,7 +46,7 @@ jobs:
         run: |
           sentry-cli --help
           sentry-cli info
-      - name: Test Sentry Integration
+      - name: Deploy Sentry release
         if: matrix.os == 'ubuntu-20.04' && matrix.version == 'latest'  # do not duplicate releases
         run: |
           VERSION=$(sentry-cli releases propose-version)
@@ -63,7 +59,8 @@ jobs:
             --verbose \
             --strip-common-prefix
           sentry-cli releases finalize "$VERSION"
-
+      - name: Send Sentry test event
+        run: |
           export SENTRY_DSN=${{ secrets.SENTRY_DSN }}
           sentry-cli send-event \
             --release="$VERSION" \
