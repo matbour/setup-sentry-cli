@@ -3885,7 +3885,7 @@ var import_core3 = __toModule(require_core());
 
 // src/configure.ts
 var import_core = __toModule(require_core());
-var configure_default = () => {
+function configure() {
   const url = (0, import_core.getInput)("url");
   if (url !== "") {
     (0, import_core.exportVariable)("SENTRY_URL", url);
@@ -3903,7 +3903,7 @@ var configure_default = () => {
   if (project !== "") {
     (0, import_core.exportVariable)("SENTRY_PROJECT", project);
   }
-};
+}
 
 // src/download.ts
 var import_core2 = __toModule(require_core());
@@ -3912,36 +3912,45 @@ var import_tool_cache = __toModule(require_tool_cache());
 var import_fs = __toModule(require("fs"));
 var import_os = __toModule(require("os"));
 var import_path = __toModule(require("path"));
-var download_default = async () => {
-  const version = (0, import_core2.getInput)("version");
-  const cliDir = (0, import_path.join)((0, import_os.homedir)(), "sentry-cli");
-  (0, import_core2.debug)(`Detected platform: ${process.platform}`);
-  (0, import_core2.info)(`Installing sentry-cli version ${version}`);
-  let downloadLink;
-  if (process.platform === "linux") {
-    if (process.arch.startsWith("arm")) {
-      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-armv7`;
-    } else {
-      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
-    }
-  } else if (process.platform === "darwin") {
-    if (process.arch.startsWith("arm")) {
-      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-arm64`;
-    } else if (process.arch.match(/x\d{2}/)) {
-      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
-    } else {
-      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-universal`;
-    }
-  } else if (process.platform === "win32") {
-    downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
-  } else {
-    throw new Error(`Unsupported platform: ${process.platform} - ${process.arch}`);
+
+// src/downloadLink.ts
+var import_util = __toModule(require("util"));
+var URL_PREFIX = "https://downloads.sentry-cdn.com/sentry-cli/%s/sentry-cli-%s";
+var PLATFORM_MAPPINGS = {
+  "linux-x32": "Linux-i686",
+  "linux-x64": "Linux-x86_64",
+  "linux-arm": "Linux-armv7",
+  "linux-arm64": "Linux-aarch64",
+  "darwin-x64": "Darwin-x86_64",
+  "darwin-arm64": "Darwin-arm64",
+  "windows-x32": "Windows-i686",
+  "windows-x64": "Windows-x86_64"
+};
+function getDownloadLink(version) {
+  let platform = PLATFORM_MAPPINGS[`${process.platform}-${process.arch}`];
+  if (!platform && process.platform === "darwin") {
+    platform = "Darwin-universal";
   }
-  const cli = (0, import_path.resolve)(cliDir, "sentry-cli") + (process.platform === "win32" ? ".exe" : "");
-  (0, import_core2.debug)(`Installation directory: ${cliDir}`);
+  if (!platform) {
+    throw new TypeError(`Unsupported platform: ${process.platform}/${process.arch}`);
+  }
+  const link = (0, import_util.format)(URL_PREFIX, version, platform);
+  return platform === "Windows" ? `${link}.exe` : link;
+}
+
+// src/download.ts
+async function download() {
+  const version = (0, import_core2.getInput)("version");
+  (0, import_core2.info)(`Installing sentry-cli version ${version}`);
+  (0, import_core2.debug)(`Detected platform: ${process.platform}`);
+  (0, import_core2.debug)(`Detected architecture: ${process.arch}`);
+  const downloadLink = getDownloadLink(version);
   (0, import_core2.debug)(`Downloading from: ${downloadLink}`);
   const downloadPath = await (0, import_tool_cache.downloadTool)(downloadLink);
   (0, import_core2.debug)(`Download path: ${downloadPath}`);
+  const cliDir = (0, import_path.join)((0, import_os.homedir)(), "sentry-cli");
+  const cli = (0, import_path.resolve)(cliDir, "sentry-cli") + (process.platform === "win32" ? ".exe" : "");
+  (0, import_core2.debug)(`Installation directory: ${cliDir}`);
   if (!(0, import_fs.existsSync)(cliDir)) {
     await (0, import_io.mkdirP)(cliDir);
   }
@@ -3951,12 +3960,12 @@ var download_default = async () => {
   }
   (0, import_core2.addPath)(cliDir);
   (0, import_core2.info)(`sentry-cli executable has been installed in ${cli}`);
-};
+}
 
 // src/main.ts
 async function main() {
-  configure_default();
-  await download_default();
+  await download();
+  configure();
 }
 main().catch((e) => (0, import_core3.setFailed)(e));
 //# sourceMappingURL=index.js.map
