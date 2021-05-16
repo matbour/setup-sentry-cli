@@ -525,7 +525,7 @@ var require_io = __commonJS((exports2) => {
   var path = __importStar(require("path"));
   var util_1 = require("util");
   var ioUtil = __importStar(require_io_util());
-  var exec2 = util_1.promisify(childProcess.exec);
+  var exec = util_1.promisify(childProcess.exec);
   function cp(source, dest, options = {}) {
     return __awaiter(this, void 0, void 0, function* () {
       const {force, recursive} = readCopyOptions(options);
@@ -579,9 +579,9 @@ var require_io = __commonJS((exports2) => {
       if (ioUtil.IS_WINDOWS) {
         try {
           if (yield ioUtil.isDirectory(inputPath, true)) {
-            yield exec2(`rd /s /q "${inputPath}"`);
+            yield exec(`rd /s /q "${inputPath}"`);
           } else {
-            yield exec2(`del /f /a "${inputPath}"`);
+            yield exec(`del /f /a "${inputPath}"`);
           }
         } catch (err) {
           if (err.code !== "ENOENT")
@@ -603,7 +603,7 @@ var require_io = __commonJS((exports2) => {
           return;
         }
         if (isDir) {
-          yield exec2(`rm -rf "${inputPath}"`);
+          yield exec(`rm -rf "${inputPath}"`);
         } else {
           yield ioUtil.unlink(inputPath);
         }
@@ -727,521 +727,6 @@ var require_io = __commonJS((exports2) => {
       }
     });
   }
-});
-
-// node_modules/@actions/exec/lib/toolrunner.js
-var require_toolrunner = __commonJS((exports2) => {
-  "use strict";
-  var __awaiter = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
-    function adopt(value) {
-      return value instanceof P ? value : new P(function(resolve2) {
-        resolve2(value);
-      });
-    }
-    return new (P || (P = Promise))(function(resolve2, reject) {
-      function fulfilled(value) {
-        try {
-          step(generator.next(value));
-        } catch (e) {
-          reject(e);
-        }
-      }
-      function rejected(value) {
-        try {
-          step(generator["throw"](value));
-        } catch (e) {
-          reject(e);
-        }
-      }
-      function step(result) {
-        result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
-      }
-      step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-  };
-  var __importStar = exports2 && exports2.__importStar || function(mod) {
-    if (mod && mod.__esModule)
-      return mod;
-    var result = {};
-    if (mod != null) {
-      for (var k in mod)
-        if (Object.hasOwnProperty.call(mod, k))
-          result[k] = mod[k];
-    }
-    result["default"] = mod;
-    return result;
-  };
-  Object.defineProperty(exports2, "__esModule", {value: true});
-  var os = __importStar(require("os"));
-  var events = __importStar(require("events"));
-  var child = __importStar(require("child_process"));
-  var path = __importStar(require("path"));
-  var io = __importStar(require_io());
-  var ioUtil = __importStar(require_io_util());
-  var IS_WINDOWS = process.platform === "win32";
-  var ToolRunner = class extends events.EventEmitter {
-    constructor(toolPath, args, options) {
-      super();
-      if (!toolPath) {
-        throw new Error("Parameter 'toolPath' cannot be null or empty.");
-      }
-      this.toolPath = toolPath;
-      this.args = args || [];
-      this.options = options || {};
-    }
-    _debug(message) {
-      if (this.options.listeners && this.options.listeners.debug) {
-        this.options.listeners.debug(message);
-      }
-    }
-    _getCommandString(options, noPrefix) {
-      const toolPath = this._getSpawnFileName();
-      const args = this._getSpawnArgs(options);
-      let cmd = noPrefix ? "" : "[command]";
-      if (IS_WINDOWS) {
-        if (this._isCmdFile()) {
-          cmd += toolPath;
-          for (const a of args) {
-            cmd += ` ${a}`;
-          }
-        } else if (options.windowsVerbatimArguments) {
-          cmd += `"${toolPath}"`;
-          for (const a of args) {
-            cmd += ` ${a}`;
-          }
-        } else {
-          cmd += this._windowsQuoteCmdArg(toolPath);
-          for (const a of args) {
-            cmd += ` ${this._windowsQuoteCmdArg(a)}`;
-          }
-        }
-      } else {
-        cmd += toolPath;
-        for (const a of args) {
-          cmd += ` ${a}`;
-        }
-      }
-      return cmd;
-    }
-    _processLineBuffer(data, strBuffer, onLine) {
-      try {
-        let s = strBuffer + data.toString();
-        let n = s.indexOf(os.EOL);
-        while (n > -1) {
-          const line = s.substring(0, n);
-          onLine(line);
-          s = s.substring(n + os.EOL.length);
-          n = s.indexOf(os.EOL);
-        }
-        strBuffer = s;
-      } catch (err) {
-        this._debug(`error processing line. Failed with error ${err}`);
-      }
-    }
-    _getSpawnFileName() {
-      if (IS_WINDOWS) {
-        if (this._isCmdFile()) {
-          return process.env["COMSPEC"] || "cmd.exe";
-        }
-      }
-      return this.toolPath;
-    }
-    _getSpawnArgs(options) {
-      if (IS_WINDOWS) {
-        if (this._isCmdFile()) {
-          let argline = `/D /S /C "${this._windowsQuoteCmdArg(this.toolPath)}`;
-          for (const a of this.args) {
-            argline += " ";
-            argline += options.windowsVerbatimArguments ? a : this._windowsQuoteCmdArg(a);
-          }
-          argline += '"';
-          return [argline];
-        }
-      }
-      return this.args;
-    }
-    _endsWith(str, end) {
-      return str.endsWith(end);
-    }
-    _isCmdFile() {
-      const upperToolPath = this.toolPath.toUpperCase();
-      return this._endsWith(upperToolPath, ".CMD") || this._endsWith(upperToolPath, ".BAT");
-    }
-    _windowsQuoteCmdArg(arg) {
-      if (!this._isCmdFile()) {
-        return this._uvQuoteCmdArg(arg);
-      }
-      if (!arg) {
-        return '""';
-      }
-      const cmdSpecialChars = [
-        " ",
-        "	",
-        "&",
-        "(",
-        ")",
-        "[",
-        "]",
-        "{",
-        "}",
-        "^",
-        "=",
-        ";",
-        "!",
-        "'",
-        "+",
-        ",",
-        "`",
-        "~",
-        "|",
-        "<",
-        ">",
-        '"'
-      ];
-      let needsQuotes = false;
-      for (const char of arg) {
-        if (cmdSpecialChars.some((x) => x === char)) {
-          needsQuotes = true;
-          break;
-        }
-      }
-      if (!needsQuotes) {
-        return arg;
-      }
-      let reverse = '"';
-      let quoteHit = true;
-      for (let i = arg.length; i > 0; i--) {
-        reverse += arg[i - 1];
-        if (quoteHit && arg[i - 1] === "\\") {
-          reverse += "\\";
-        } else if (arg[i - 1] === '"') {
-          quoteHit = true;
-          reverse += '"';
-        } else {
-          quoteHit = false;
-        }
-      }
-      reverse += '"';
-      return reverse.split("").reverse().join("");
-    }
-    _uvQuoteCmdArg(arg) {
-      if (!arg) {
-        return '""';
-      }
-      if (!arg.includes(" ") && !arg.includes("	") && !arg.includes('"')) {
-        return arg;
-      }
-      if (!arg.includes('"') && !arg.includes("\\")) {
-        return `"${arg}"`;
-      }
-      let reverse = '"';
-      let quoteHit = true;
-      for (let i = arg.length; i > 0; i--) {
-        reverse += arg[i - 1];
-        if (quoteHit && arg[i - 1] === "\\") {
-          reverse += "\\";
-        } else if (arg[i - 1] === '"') {
-          quoteHit = true;
-          reverse += "\\";
-        } else {
-          quoteHit = false;
-        }
-      }
-      reverse += '"';
-      return reverse.split("").reverse().join("");
-    }
-    _cloneExecOptions(options) {
-      options = options || {};
-      const result = {
-        cwd: options.cwd || process.cwd(),
-        env: options.env || process.env,
-        silent: options.silent || false,
-        windowsVerbatimArguments: options.windowsVerbatimArguments || false,
-        failOnStdErr: options.failOnStdErr || false,
-        ignoreReturnCode: options.ignoreReturnCode || false,
-        delay: options.delay || 1e4
-      };
-      result.outStream = options.outStream || process.stdout;
-      result.errStream = options.errStream || process.stderr;
-      return result;
-    }
-    _getSpawnOptions(options, toolPath) {
-      options = options || {};
-      const result = {};
-      result.cwd = options.cwd;
-      result.env = options.env;
-      result["windowsVerbatimArguments"] = options.windowsVerbatimArguments || this._isCmdFile();
-      if (options.windowsVerbatimArguments) {
-        result.argv0 = `"${toolPath}"`;
-      }
-      return result;
-    }
-    exec() {
-      return __awaiter(this, void 0, void 0, function* () {
-        if (!ioUtil.isRooted(this.toolPath) && (this.toolPath.includes("/") || IS_WINDOWS && this.toolPath.includes("\\"))) {
-          this.toolPath = path.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
-        }
-        this.toolPath = yield io.which(this.toolPath, true);
-        return new Promise((resolve2, reject) => {
-          this._debug(`exec tool: ${this.toolPath}`);
-          this._debug("arguments:");
-          for (const arg of this.args) {
-            this._debug(`   ${arg}`);
-          }
-          const optionsNonNull = this._cloneExecOptions(this.options);
-          if (!optionsNonNull.silent && optionsNonNull.outStream) {
-            optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os.EOL);
-          }
-          const state = new ExecState(optionsNonNull, this.toolPath);
-          state.on("debug", (message) => {
-            this._debug(message);
-          });
-          const fileName = this._getSpawnFileName();
-          const cp = child.spawn(fileName, this._getSpawnArgs(optionsNonNull), this._getSpawnOptions(this.options, fileName));
-          const stdbuffer = "";
-          if (cp.stdout) {
-            cp.stdout.on("data", (data) => {
-              if (this.options.listeners && this.options.listeners.stdout) {
-                this.options.listeners.stdout(data);
-              }
-              if (!optionsNonNull.silent && optionsNonNull.outStream) {
-                optionsNonNull.outStream.write(data);
-              }
-              this._processLineBuffer(data, stdbuffer, (line) => {
-                if (this.options.listeners && this.options.listeners.stdline) {
-                  this.options.listeners.stdline(line);
-                }
-              });
-            });
-          }
-          const errbuffer = "";
-          if (cp.stderr) {
-            cp.stderr.on("data", (data) => {
-              state.processStderr = true;
-              if (this.options.listeners && this.options.listeners.stderr) {
-                this.options.listeners.stderr(data);
-              }
-              if (!optionsNonNull.silent && optionsNonNull.errStream && optionsNonNull.outStream) {
-                const s = optionsNonNull.failOnStdErr ? optionsNonNull.errStream : optionsNonNull.outStream;
-                s.write(data);
-              }
-              this._processLineBuffer(data, errbuffer, (line) => {
-                if (this.options.listeners && this.options.listeners.errline) {
-                  this.options.listeners.errline(line);
-                }
-              });
-            });
-          }
-          cp.on("error", (err) => {
-            state.processError = err.message;
-            state.processExited = true;
-            state.processClosed = true;
-            state.CheckComplete();
-          });
-          cp.on("exit", (code) => {
-            state.processExitCode = code;
-            state.processExited = true;
-            this._debug(`Exit code ${code} received from tool '${this.toolPath}'`);
-            state.CheckComplete();
-          });
-          cp.on("close", (code) => {
-            state.processExitCode = code;
-            state.processExited = true;
-            state.processClosed = true;
-            this._debug(`STDIO streams have closed for tool '${this.toolPath}'`);
-            state.CheckComplete();
-          });
-          state.on("done", (error, exitCode) => {
-            if (stdbuffer.length > 0) {
-              this.emit("stdline", stdbuffer);
-            }
-            if (errbuffer.length > 0) {
-              this.emit("errline", errbuffer);
-            }
-            cp.removeAllListeners();
-            if (error) {
-              reject(error);
-            } else {
-              resolve2(exitCode);
-            }
-          });
-          if (this.options.input) {
-            if (!cp.stdin) {
-              throw new Error("child process missing stdin");
-            }
-            cp.stdin.end(this.options.input);
-          }
-        });
-      });
-    }
-  };
-  exports2.ToolRunner = ToolRunner;
-  function argStringToArray(argString) {
-    const args = [];
-    let inQuotes = false;
-    let escaped = false;
-    let arg = "";
-    function append(c) {
-      if (escaped && c !== '"') {
-        arg += "\\";
-      }
-      arg += c;
-      escaped = false;
-    }
-    for (let i = 0; i < argString.length; i++) {
-      const c = argString.charAt(i);
-      if (c === '"') {
-        if (!escaped) {
-          inQuotes = !inQuotes;
-        } else {
-          append(c);
-        }
-        continue;
-      }
-      if (c === "\\" && escaped) {
-        append(c);
-        continue;
-      }
-      if (c === "\\" && inQuotes) {
-        escaped = true;
-        continue;
-      }
-      if (c === " " && !inQuotes) {
-        if (arg.length > 0) {
-          args.push(arg);
-          arg = "";
-        }
-        continue;
-      }
-      append(c);
-    }
-    if (arg.length > 0) {
-      args.push(arg.trim());
-    }
-    return args;
-  }
-  exports2.argStringToArray = argStringToArray;
-  var ExecState = class extends events.EventEmitter {
-    constructor(options, toolPath) {
-      super();
-      this.processClosed = false;
-      this.processError = "";
-      this.processExitCode = 0;
-      this.processExited = false;
-      this.processStderr = false;
-      this.delay = 1e4;
-      this.done = false;
-      this.timeout = null;
-      if (!toolPath) {
-        throw new Error("toolPath must not be empty");
-      }
-      this.options = options;
-      this.toolPath = toolPath;
-      if (options.delay) {
-        this.delay = options.delay;
-      }
-    }
-    CheckComplete() {
-      if (this.done) {
-        return;
-      }
-      if (this.processClosed) {
-        this._setResult();
-      } else if (this.processExited) {
-        this.timeout = setTimeout(ExecState.HandleTimeout, this.delay, this);
-      }
-    }
-    _debug(message) {
-      this.emit("debug", message);
-    }
-    _setResult() {
-      let error;
-      if (this.processExited) {
-        if (this.processError) {
-          error = new Error(`There was an error when attempting to execute the process '${this.toolPath}'. This may indicate the process failed to start. Error: ${this.processError}`);
-        } else if (this.processExitCode !== 0 && !this.options.ignoreReturnCode) {
-          error = new Error(`The process '${this.toolPath}' failed with exit code ${this.processExitCode}`);
-        } else if (this.processStderr && this.options.failOnStdErr) {
-          error = new Error(`The process '${this.toolPath}' failed because one or more lines were written to the STDERR stream`);
-        }
-      }
-      if (this.timeout) {
-        clearTimeout(this.timeout);
-        this.timeout = null;
-      }
-      this.done = true;
-      this.emit("done", error, this.processExitCode);
-    }
-    static HandleTimeout(state) {
-      if (state.done) {
-        return;
-      }
-      if (!state.processClosed && state.processExited) {
-        const message = `The STDIO streams did not close within ${state.delay / 1e3} seconds of the exit event from process '${state.toolPath}'. This may indicate a child process inherited the STDIO streams and has not yet exited.`;
-        state._debug(message);
-      }
-      state._setResult();
-    }
-  };
-});
-
-// node_modules/@actions/exec/lib/exec.js
-var require_exec = __commonJS((exports2) => {
-  "use strict";
-  var __awaiter = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
-    function adopt(value) {
-      return value instanceof P ? value : new P(function(resolve2) {
-        resolve2(value);
-      });
-    }
-    return new (P || (P = Promise))(function(resolve2, reject) {
-      function fulfilled(value) {
-        try {
-          step(generator.next(value));
-        } catch (e) {
-          reject(e);
-        }
-      }
-      function rejected(value) {
-        try {
-          step(generator["throw"](value));
-        } catch (e) {
-          reject(e);
-        }
-      }
-      function step(result) {
-        result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
-      }
-      step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-  };
-  var __importStar = exports2 && exports2.__importStar || function(mod) {
-    if (mod && mod.__esModule)
-      return mod;
-    var result = {};
-    if (mod != null) {
-      for (var k in mod)
-        if (Object.hasOwnProperty.call(mod, k))
-          result[k] = mod[k];
-    }
-    result["default"] = mod;
-    return result;
-  };
-  Object.defineProperty(exports2, "__esModule", {value: true});
-  var tr = __importStar(require_toolrunner());
-  function exec2(commandLine, args, options) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const commandArgs = tr.argStringToArray(commandLine);
-      if (commandArgs.length === 0) {
-        throw new Error(`Parameter 'commandLine' cannot be null or empty.`);
-      }
-      const toolPath = commandArgs[0];
-      args = commandArgs.slice(1).concat(args || []);
-      const runner = new tr.ToolRunner(toolPath, args, options);
-      return runner.exec();
-    });
-  }
-  exports2.exec = exec2;
 });
 
 // node_modules/semver/semver.js
@@ -3294,6 +2779,521 @@ var require_v4 = __commonJS((exports2, module2) => {
   module2.exports = v4;
 });
 
+// node_modules/@actions/exec/lib/toolrunner.js
+var require_toolrunner = __commonJS((exports2) => {
+  "use strict";
+  var __awaiter = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
+    function adopt(value) {
+      return value instanceof P ? value : new P(function(resolve2) {
+        resolve2(value);
+      });
+    }
+    return new (P || (P = Promise))(function(resolve2, reject) {
+      function fulfilled(value) {
+        try {
+          step(generator.next(value));
+        } catch (e) {
+          reject(e);
+        }
+      }
+      function rejected(value) {
+        try {
+          step(generator["throw"](value));
+        } catch (e) {
+          reject(e);
+        }
+      }
+      function step(result) {
+        result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
+      }
+      step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+  };
+  var __importStar = exports2 && exports2.__importStar || function(mod) {
+    if (mod && mod.__esModule)
+      return mod;
+    var result = {};
+    if (mod != null) {
+      for (var k in mod)
+        if (Object.hasOwnProperty.call(mod, k))
+          result[k] = mod[k];
+    }
+    result["default"] = mod;
+    return result;
+  };
+  Object.defineProperty(exports2, "__esModule", {value: true});
+  var os = __importStar(require("os"));
+  var events = __importStar(require("events"));
+  var child = __importStar(require("child_process"));
+  var path = __importStar(require("path"));
+  var io = __importStar(require_io());
+  var ioUtil = __importStar(require_io_util());
+  var IS_WINDOWS = process.platform === "win32";
+  var ToolRunner = class extends events.EventEmitter {
+    constructor(toolPath, args, options) {
+      super();
+      if (!toolPath) {
+        throw new Error("Parameter 'toolPath' cannot be null or empty.");
+      }
+      this.toolPath = toolPath;
+      this.args = args || [];
+      this.options = options || {};
+    }
+    _debug(message) {
+      if (this.options.listeners && this.options.listeners.debug) {
+        this.options.listeners.debug(message);
+      }
+    }
+    _getCommandString(options, noPrefix) {
+      const toolPath = this._getSpawnFileName();
+      const args = this._getSpawnArgs(options);
+      let cmd = noPrefix ? "" : "[command]";
+      if (IS_WINDOWS) {
+        if (this._isCmdFile()) {
+          cmd += toolPath;
+          for (const a of args) {
+            cmd += ` ${a}`;
+          }
+        } else if (options.windowsVerbatimArguments) {
+          cmd += `"${toolPath}"`;
+          for (const a of args) {
+            cmd += ` ${a}`;
+          }
+        } else {
+          cmd += this._windowsQuoteCmdArg(toolPath);
+          for (const a of args) {
+            cmd += ` ${this._windowsQuoteCmdArg(a)}`;
+          }
+        }
+      } else {
+        cmd += toolPath;
+        for (const a of args) {
+          cmd += ` ${a}`;
+        }
+      }
+      return cmd;
+    }
+    _processLineBuffer(data, strBuffer, onLine) {
+      try {
+        let s = strBuffer + data.toString();
+        let n = s.indexOf(os.EOL);
+        while (n > -1) {
+          const line = s.substring(0, n);
+          onLine(line);
+          s = s.substring(n + os.EOL.length);
+          n = s.indexOf(os.EOL);
+        }
+        strBuffer = s;
+      } catch (err) {
+        this._debug(`error processing line. Failed with error ${err}`);
+      }
+    }
+    _getSpawnFileName() {
+      if (IS_WINDOWS) {
+        if (this._isCmdFile()) {
+          return process.env["COMSPEC"] || "cmd.exe";
+        }
+      }
+      return this.toolPath;
+    }
+    _getSpawnArgs(options) {
+      if (IS_WINDOWS) {
+        if (this._isCmdFile()) {
+          let argline = `/D /S /C "${this._windowsQuoteCmdArg(this.toolPath)}`;
+          for (const a of this.args) {
+            argline += " ";
+            argline += options.windowsVerbatimArguments ? a : this._windowsQuoteCmdArg(a);
+          }
+          argline += '"';
+          return [argline];
+        }
+      }
+      return this.args;
+    }
+    _endsWith(str, end) {
+      return str.endsWith(end);
+    }
+    _isCmdFile() {
+      const upperToolPath = this.toolPath.toUpperCase();
+      return this._endsWith(upperToolPath, ".CMD") || this._endsWith(upperToolPath, ".BAT");
+    }
+    _windowsQuoteCmdArg(arg) {
+      if (!this._isCmdFile()) {
+        return this._uvQuoteCmdArg(arg);
+      }
+      if (!arg) {
+        return '""';
+      }
+      const cmdSpecialChars = [
+        " ",
+        "	",
+        "&",
+        "(",
+        ")",
+        "[",
+        "]",
+        "{",
+        "}",
+        "^",
+        "=",
+        ";",
+        "!",
+        "'",
+        "+",
+        ",",
+        "`",
+        "~",
+        "|",
+        "<",
+        ">",
+        '"'
+      ];
+      let needsQuotes = false;
+      for (const char of arg) {
+        if (cmdSpecialChars.some((x) => x === char)) {
+          needsQuotes = true;
+          break;
+        }
+      }
+      if (!needsQuotes) {
+        return arg;
+      }
+      let reverse = '"';
+      let quoteHit = true;
+      for (let i = arg.length; i > 0; i--) {
+        reverse += arg[i - 1];
+        if (quoteHit && arg[i - 1] === "\\") {
+          reverse += "\\";
+        } else if (arg[i - 1] === '"') {
+          quoteHit = true;
+          reverse += '"';
+        } else {
+          quoteHit = false;
+        }
+      }
+      reverse += '"';
+      return reverse.split("").reverse().join("");
+    }
+    _uvQuoteCmdArg(arg) {
+      if (!arg) {
+        return '""';
+      }
+      if (!arg.includes(" ") && !arg.includes("	") && !arg.includes('"')) {
+        return arg;
+      }
+      if (!arg.includes('"') && !arg.includes("\\")) {
+        return `"${arg}"`;
+      }
+      let reverse = '"';
+      let quoteHit = true;
+      for (let i = arg.length; i > 0; i--) {
+        reverse += arg[i - 1];
+        if (quoteHit && arg[i - 1] === "\\") {
+          reverse += "\\";
+        } else if (arg[i - 1] === '"') {
+          quoteHit = true;
+          reverse += "\\";
+        } else {
+          quoteHit = false;
+        }
+      }
+      reverse += '"';
+      return reverse.split("").reverse().join("");
+    }
+    _cloneExecOptions(options) {
+      options = options || {};
+      const result = {
+        cwd: options.cwd || process.cwd(),
+        env: options.env || process.env,
+        silent: options.silent || false,
+        windowsVerbatimArguments: options.windowsVerbatimArguments || false,
+        failOnStdErr: options.failOnStdErr || false,
+        ignoreReturnCode: options.ignoreReturnCode || false,
+        delay: options.delay || 1e4
+      };
+      result.outStream = options.outStream || process.stdout;
+      result.errStream = options.errStream || process.stderr;
+      return result;
+    }
+    _getSpawnOptions(options, toolPath) {
+      options = options || {};
+      const result = {};
+      result.cwd = options.cwd;
+      result.env = options.env;
+      result["windowsVerbatimArguments"] = options.windowsVerbatimArguments || this._isCmdFile();
+      if (options.windowsVerbatimArguments) {
+        result.argv0 = `"${toolPath}"`;
+      }
+      return result;
+    }
+    exec() {
+      return __awaiter(this, void 0, void 0, function* () {
+        if (!ioUtil.isRooted(this.toolPath) && (this.toolPath.includes("/") || IS_WINDOWS && this.toolPath.includes("\\"))) {
+          this.toolPath = path.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
+        }
+        this.toolPath = yield io.which(this.toolPath, true);
+        return new Promise((resolve2, reject) => {
+          this._debug(`exec tool: ${this.toolPath}`);
+          this._debug("arguments:");
+          for (const arg of this.args) {
+            this._debug(`   ${arg}`);
+          }
+          const optionsNonNull = this._cloneExecOptions(this.options);
+          if (!optionsNonNull.silent && optionsNonNull.outStream) {
+            optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os.EOL);
+          }
+          const state = new ExecState(optionsNonNull, this.toolPath);
+          state.on("debug", (message) => {
+            this._debug(message);
+          });
+          const fileName = this._getSpawnFileName();
+          const cp = child.spawn(fileName, this._getSpawnArgs(optionsNonNull), this._getSpawnOptions(this.options, fileName));
+          const stdbuffer = "";
+          if (cp.stdout) {
+            cp.stdout.on("data", (data) => {
+              if (this.options.listeners && this.options.listeners.stdout) {
+                this.options.listeners.stdout(data);
+              }
+              if (!optionsNonNull.silent && optionsNonNull.outStream) {
+                optionsNonNull.outStream.write(data);
+              }
+              this._processLineBuffer(data, stdbuffer, (line) => {
+                if (this.options.listeners && this.options.listeners.stdline) {
+                  this.options.listeners.stdline(line);
+                }
+              });
+            });
+          }
+          const errbuffer = "";
+          if (cp.stderr) {
+            cp.stderr.on("data", (data) => {
+              state.processStderr = true;
+              if (this.options.listeners && this.options.listeners.stderr) {
+                this.options.listeners.stderr(data);
+              }
+              if (!optionsNonNull.silent && optionsNonNull.errStream && optionsNonNull.outStream) {
+                const s = optionsNonNull.failOnStdErr ? optionsNonNull.errStream : optionsNonNull.outStream;
+                s.write(data);
+              }
+              this._processLineBuffer(data, errbuffer, (line) => {
+                if (this.options.listeners && this.options.listeners.errline) {
+                  this.options.listeners.errline(line);
+                }
+              });
+            });
+          }
+          cp.on("error", (err) => {
+            state.processError = err.message;
+            state.processExited = true;
+            state.processClosed = true;
+            state.CheckComplete();
+          });
+          cp.on("exit", (code) => {
+            state.processExitCode = code;
+            state.processExited = true;
+            this._debug(`Exit code ${code} received from tool '${this.toolPath}'`);
+            state.CheckComplete();
+          });
+          cp.on("close", (code) => {
+            state.processExitCode = code;
+            state.processExited = true;
+            state.processClosed = true;
+            this._debug(`STDIO streams have closed for tool '${this.toolPath}'`);
+            state.CheckComplete();
+          });
+          state.on("done", (error, exitCode) => {
+            if (stdbuffer.length > 0) {
+              this.emit("stdline", stdbuffer);
+            }
+            if (errbuffer.length > 0) {
+              this.emit("errline", errbuffer);
+            }
+            cp.removeAllListeners();
+            if (error) {
+              reject(error);
+            } else {
+              resolve2(exitCode);
+            }
+          });
+          if (this.options.input) {
+            if (!cp.stdin) {
+              throw new Error("child process missing stdin");
+            }
+            cp.stdin.end(this.options.input);
+          }
+        });
+      });
+    }
+  };
+  exports2.ToolRunner = ToolRunner;
+  function argStringToArray(argString) {
+    const args = [];
+    let inQuotes = false;
+    let escaped = false;
+    let arg = "";
+    function append(c) {
+      if (escaped && c !== '"') {
+        arg += "\\";
+      }
+      arg += c;
+      escaped = false;
+    }
+    for (let i = 0; i < argString.length; i++) {
+      const c = argString.charAt(i);
+      if (c === '"') {
+        if (!escaped) {
+          inQuotes = !inQuotes;
+        } else {
+          append(c);
+        }
+        continue;
+      }
+      if (c === "\\" && escaped) {
+        append(c);
+        continue;
+      }
+      if (c === "\\" && inQuotes) {
+        escaped = true;
+        continue;
+      }
+      if (c === " " && !inQuotes) {
+        if (arg.length > 0) {
+          args.push(arg);
+          arg = "";
+        }
+        continue;
+      }
+      append(c);
+    }
+    if (arg.length > 0) {
+      args.push(arg.trim());
+    }
+    return args;
+  }
+  exports2.argStringToArray = argStringToArray;
+  var ExecState = class extends events.EventEmitter {
+    constructor(options, toolPath) {
+      super();
+      this.processClosed = false;
+      this.processError = "";
+      this.processExitCode = 0;
+      this.processExited = false;
+      this.processStderr = false;
+      this.delay = 1e4;
+      this.done = false;
+      this.timeout = null;
+      if (!toolPath) {
+        throw new Error("toolPath must not be empty");
+      }
+      this.options = options;
+      this.toolPath = toolPath;
+      if (options.delay) {
+        this.delay = options.delay;
+      }
+    }
+    CheckComplete() {
+      if (this.done) {
+        return;
+      }
+      if (this.processClosed) {
+        this._setResult();
+      } else if (this.processExited) {
+        this.timeout = setTimeout(ExecState.HandleTimeout, this.delay, this);
+      }
+    }
+    _debug(message) {
+      this.emit("debug", message);
+    }
+    _setResult() {
+      let error;
+      if (this.processExited) {
+        if (this.processError) {
+          error = new Error(`There was an error when attempting to execute the process '${this.toolPath}'. This may indicate the process failed to start. Error: ${this.processError}`);
+        } else if (this.processExitCode !== 0 && !this.options.ignoreReturnCode) {
+          error = new Error(`The process '${this.toolPath}' failed with exit code ${this.processExitCode}`);
+        } else if (this.processStderr && this.options.failOnStdErr) {
+          error = new Error(`The process '${this.toolPath}' failed because one or more lines were written to the STDERR stream`);
+        }
+      }
+      if (this.timeout) {
+        clearTimeout(this.timeout);
+        this.timeout = null;
+      }
+      this.done = true;
+      this.emit("done", error, this.processExitCode);
+    }
+    static HandleTimeout(state) {
+      if (state.done) {
+        return;
+      }
+      if (!state.processClosed && state.processExited) {
+        const message = `The STDIO streams did not close within ${state.delay / 1e3} seconds of the exit event from process '${state.toolPath}'. This may indicate a child process inherited the STDIO streams and has not yet exited.`;
+        state._debug(message);
+      }
+      state._setResult();
+    }
+  };
+});
+
+// node_modules/@actions/exec/lib/exec.js
+var require_exec = __commonJS((exports2) => {
+  "use strict";
+  var __awaiter = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
+    function adopt(value) {
+      return value instanceof P ? value : new P(function(resolve2) {
+        resolve2(value);
+      });
+    }
+    return new (P || (P = Promise))(function(resolve2, reject) {
+      function fulfilled(value) {
+        try {
+          step(generator.next(value));
+        } catch (e) {
+          reject(e);
+        }
+      }
+      function rejected(value) {
+        try {
+          step(generator["throw"](value));
+        } catch (e) {
+          reject(e);
+        }
+      }
+      function step(result) {
+        result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
+      }
+      step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+  };
+  var __importStar = exports2 && exports2.__importStar || function(mod) {
+    if (mod && mod.__esModule)
+      return mod;
+    var result = {};
+    if (mod != null) {
+      for (var k in mod)
+        if (Object.hasOwnProperty.call(mod, k))
+          result[k] = mod[k];
+    }
+    result["default"] = mod;
+    return result;
+  };
+  Object.defineProperty(exports2, "__esModule", {value: true});
+  var tr = __importStar(require_toolrunner());
+  function exec(commandLine, args, options) {
+    return __awaiter(this, void 0, void 0, function* () {
+      const commandArgs = tr.argStringToArray(commandLine);
+      if (commandArgs.length === 0) {
+        throw new Error(`Parameter 'commandLine' cannot be null or empty.`);
+      }
+      const toolPath = commandArgs[0];
+      args = commandArgs.slice(1).concat(args || []);
+      const runner = new tr.ToolRunner(toolPath, args, options);
+      return runner.exec();
+    });
+  }
+  exports2.exec = exec;
+});
+
 // node_modules/@actions/tool-cache/lib/retry-helper.js
 var require_retry_helper = __commonJS((exports2) => {
   "use strict";
@@ -3907,53 +3907,50 @@ var configure_default = () => {
 
 // src/download.ts
 var import_core2 = __toModule(require_core());
-var import_exec = __toModule(require_exec());
 var import_io = __toModule(require_io());
 var import_tool_cache = __toModule(require_tool_cache());
 var import_fs = __toModule(require("fs"));
+var import_os = __toModule(require("os"));
 var import_path = __toModule(require("path"));
 var download_default = async () => {
   const version = (0, import_core2.getInput)("version");
+  const cliDir = (0, import_path.join)((0, import_os.homedir)(), "sentry-cli");
   (0, import_core2.debug)(`Detected platform: ${process.platform}`);
   (0, import_core2.info)(`Installing sentry-cli version ${version}`);
   let downloadLink;
-  let binDir;
-  switch (process.platform) {
-    case "linux":
+  if (process.platform === "linux") {
+    if (process.arch.startsWith("arm")) {
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-armv7`;
+    } else {
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
-      binDir = (0, import_path.join)("/usr", "local", "bin");
-      break;
-    case "darwin":
+    }
+  } else if (process.platform === "darwin") {
+    if (process.arch.startsWith("arm")) {
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-arm64`;
+    } else if (process.arch.match(/x\d{2}/)) {
       downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
-      binDir = (0, import_path.join)("/usr", "local", "bin");
-      break;
-    case "win32":
-      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
-      binDir = (0, import_path.join)("C:\\", "Program Files", "sentry-cli");
-      break;
-    default:
-      throw new Error(`Unsupported platform: ${process.platform}`);
+    } else {
+      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-universal`;
+    }
+  } else if (process.platform === "win32") {
+    downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
+  } else {
+    throw new Error(`Unsupported platform: ${process.platform} - ${process.arch}`);
   }
-  const destinationPath = (0, import_path.resolve)(binDir, "sentry-cli") + (process.platform === "win32" ? ".exe" : "");
-  (0, import_core2.debug)(`Installation directory: ${binDir}`);
+  const cli = (0, import_path.resolve)(cliDir, "sentry-cli") + (process.platform === "win32" ? ".exe" : "");
+  (0, import_core2.debug)(`Installation directory: ${cliDir}`);
   (0, import_core2.debug)(`Downloading from: ${downloadLink}`);
   const downloadPath = await (0, import_tool_cache.downloadTool)(downloadLink);
   (0, import_core2.debug)(`Download path: ${downloadPath}`);
-  if (!(0, import_fs.existsSync)(binDir)) {
-    await (0, import_io.mkdirP)(binDir);
+  if (!(0, import_fs.existsSync)(cliDir)) {
+    await (0, import_io.mkdirP)(cliDir);
   }
-  switch (process.platform) {
-    case "linux":
-    case "darwin":
-      await (0, import_exec.exec)("sudo", ["cp", downloadPath, destinationPath]);
-      await (0, import_exec.exec)("sudo", ["chmod", "+x", destinationPath]);
-      break;
-    case "win32":
-      (0, import_fs.copyFileSync)(downloadPath, destinationPath);
-      break;
+  (0, import_fs.copyFileSync)(downloadPath, cli);
+  if (process.platform === "linux" || process.platform === "darwin") {
+    (0, import_fs.chmodSync)(cli, 493);
   }
-  (0, import_core2.addPath)(binDir);
-  (0, import_core2.info)(`sentry-cli executable has been installed in ${destinationPath}`);
+  (0, import_core2.addPath)(cliDir);
+  (0, import_core2.info)(`sentry-cli executable has been installed in ${cli}`);
 };
 
 // src/main.ts

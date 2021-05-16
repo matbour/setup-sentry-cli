@@ -1,5 +1,8 @@
 # Changelog
 
+## [Version 1.2.0](https://github.com/mathieu-bour/setup-sentry-cli/releases/tag/1.2.0)
+- **feat**(arch): add support for ARM-based architectures (closes #11)
+
 ## [Version 1.1.0](https://github.com/mathieu-bour/setup-sentry-cli/releases/tag/1.1.0)
 - **fix**(macos): make sentry-cli command available on macOS (fixes #4)
 - **build**(*): use esbuild instead of @zeit/ncc
