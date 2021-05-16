@@ -2,7 +2,7 @@
 
 ## [Version 1.2.0](https://github.com/mathieu-bour/setup-sentry-cli/releases/tag/1.2.0)
 
-- **feat**(arch): add support for ARM-based architectures (closes #11)
+- **feat**(arch): add support for ARM-based architectures (closes #11), thanks to @paresy for your support!
 
 ## [Version 1.1.0](https://github.com/mathieu-bour/setup-sentry-cli/releases/tag/1.1.0)
 
