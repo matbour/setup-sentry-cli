@@ -1,10 +1,10 @@
-import { addPath, debug, getInput, info } from '@actions/core';
-import { mkdirP } from '@actions/io';
-import { downloadTool } from '@actions/tool-cache';
 import { chmodSync, copyFileSync, existsSync } from 'fs';
 import { homedir } from 'os';
 import { join, resolve } from 'path';
-import { getDownloadLink } from './downloadLink';
+import { addPath, debug, getInput, info } from '@actions/core';
+import { mkdirP } from '@actions/io';
+import { downloadTool } from '@actions/tool-cache';
+import { getDownloadLink } from './get-download-link';
 
 /**
  * Download the Sentry CLI executable.

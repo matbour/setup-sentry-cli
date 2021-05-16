@@ -4,18 +4,12 @@
     "target": "es2019",
     "moduleResolution": "node",
     "strict": true,
-    "lib": [
-      "es6"
-    ],
+    "lib": ["es6"],
     "outDir": "./dist",
     "rootDir": "./src",
     "esModuleInterop": true,
     "isolatedModules": true,
-    "typeRoots": [
-      "node_modules/@types"
-    ]
+    "typeRoots": ["node_modules/@types"]
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

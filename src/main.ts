@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import { setFailed } from '@actions/core';
 import { configure } from './configure';
 import { download } from './download';
@@ -7,4 +8,4 @@ async function main() {
   configure();
 }
 
-main().catch(e => setFailed(e));
+main().catch((e) => setFailed(e));

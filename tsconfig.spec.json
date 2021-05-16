@@ -3,7 +3,5 @@
   "compilerOptions": {
     "isolatedModules": false
   },
-  "include": [
-    "**/*.spec.ts"
-  ]
+  "include": ["**/*.spec.ts"]
 }

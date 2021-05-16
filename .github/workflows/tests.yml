@@ -1,9 +1,9 @@
 name: Tests
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    types: [ opened, synchronize, reopened ]
+    types: [opened, synchronize, reopened]
 jobs:
   lint:
     name: Lint with ESLint + TypeCheck
@@ -25,8 +25,8 @@ jobs:
     name: Test Sentry Integration
     strategy:
       matrix:
-        os: [ ubuntu-18.04, ubuntu-20.04, macos-10.15, windows-2019 ]
-        version: [ latest, 1.58.0 ]
+        os: [ubuntu-18.04, ubuntu-20.04, macos-10.15, windows-2019]
+        version: [latest, 1.58.0]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -47,7 +47,7 @@ jobs:
           sentry-cli --help
           sentry-cli info
       - name: Deploy Sentry release
-        if: matrix.os == 'ubuntu-20.04' && matrix.version == 'latest'  # do not duplicate releases
+        if: matrix.os == 'ubuntu-20.04' && matrix.version == 'latest' # do not duplicate releases
         run: |
           VERSION=$(sentry-cli releases propose-version)
           sentry-cli releases new "$VERSION"
