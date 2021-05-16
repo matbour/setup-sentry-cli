@@ -25,7 +25,7 @@ jobs:
     name: Test Sentry Integration
     strategy:
       matrix:
-        os: [ ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, macos-10.15, windows-2019 ]
+        os: [ ubuntu-18.04, ubuntu-20.04, macos-10.15, windows-2019 ]
         version: [ latest, 1.58.0 ]
       fail-fast: false
     runs-on: ${{ matrix.os }}
