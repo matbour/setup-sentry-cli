@@ -42,6 +42,20 @@ following:
 | `macos-latest`   | ![supported] |
 | `windows-latest` | ![supported] |
 
+This action also support ARM-based systems (armv7 and arm64), thanks to @paresy support.
+
+| Platform | Architecture    | Status       |
+| -------- | --------------- | ------------ |
+| linux    | x32 (i686)      | ![supported] |
+| linux    | x64 (x86_64)    | ![supported] |
+| linux    | arm (armv7)     | ![supported] |
+| linux    | arm64 (aarch64) | ![supported] |
+| darwin   | x64 (x86_64)    | ![supported] |
+| darwin   | arm64           | ![supported] |
+| win32    | x32 (i686)      | ![supported] |
+| win32    | x64 (x86_64)    | ![supported] |
+
+
 ### Inputs
 
 | Name           | Type                  | Default value |
@@ -113,7 +127,7 @@ By default, this minimal example will install the latest version of the Sentry C
 
 ```yaml
 - name: Setup Sentry CLI
-  uses: mathieu-bour/setup-sentry-cli@1.1.0
+  uses: mathieu-bour/setup-sentry-cli@1.2.0
   with:
     version: latest # optional if 'latest'
     url: https://sentry.yourcompany.com # optional if you are using https://sentry.io
