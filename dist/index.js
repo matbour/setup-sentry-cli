@@ -3923,8 +3923,8 @@ var PLATFORM_MAPPINGS = {
   "linux-arm64": "Linux-aarch64",
   "darwin-x64": "Darwin-x86_64",
   "darwin-arm64": "Darwin-arm64",
-  "windows-x32": "Windows-i686",
-  "windows-x64": "Windows-x86_64"
+  "win32-x32": "Windows-i686",
+  "win32-x64": "Windows-x86_64"
 };
 function getDownloadLink(version) {
   let platform = PLATFORM_MAPPINGS[`${process.platform}-${process.arch}`];
@@ -3935,7 +3935,7 @@ function getDownloadLink(version) {
     throw new TypeError(`Unsupported platform: ${process.platform}/${process.arch}`);
   }
   const link = (0, import_util.format)(URL_PREFIX, version, platform);
-  return platform === "Windows" ? `${link}.exe` : link;
+  return platform.startsWith("Windows") ? `${link}.exe` : link;
 }
 
 // src/download.ts

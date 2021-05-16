@@ -1,4 +1,3 @@
-import { platform } from 'os';
 import { format } from 'util';
 
 const URL_PREFIX = 'https://downloads.sentry-cdn.com/sentry-cli/%s/sentry-cli-%s';
@@ -9,8 +8,8 @@ const PLATFORM_MAPPINGS: Record<string, string> = {
   'linux-arm64': 'Linux-aarch64',
   'darwin-x64': 'Darwin-x86_64',
   'darwin-arm64': 'Darwin-arm64',
-  'windows-x32': 'Windows-i686',
-  'windows-x64': 'Windows-x86_64',
+  'win32-x32': 'Windows-i686',
+  'win32-x64': 'Windows-x86_64',
 };
 
 /**
@@ -31,5 +30,5 @@ export function getDownloadLink(version: string) {
 
   const link = format(URL_PREFIX, version, platform);
 
-  return platform === 'Windows' ? `${link}.exe` : link;
+  return platform.startsWith('Windows') ? `${link}.exe` : link;
 }
