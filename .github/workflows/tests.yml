@@ -51,7 +51,7 @@ jobs:
         run: |
           VERSION=$(sentry-cli releases propose-version)
           sentry-cli releases new "$VERSION"
-          sentry-cli releases set-commits "$VERSION" --auto
+          sentry-cli releases set-commits "$VERSION" --auto || true
           sentry-cli releases files "$VERSION" upload-sourcemaps ./dist \
             --rewrite \
             --ext map \
