@@ -1,10 +1,11 @@
+import 'source-map-support/register';
 import { setFailed } from '@actions/core';
-import configure from './configure';
-import download from './download';
+import { configure } from './configure';
+import { download } from './download';
 
 async function main() {
-  configure();
   await download();
+  configure();
 }
 
-main().catch(e => setFailed(e));
+main().catch((e) => setFailed(e));

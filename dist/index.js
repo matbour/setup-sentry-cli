@@ -24,6 +24,2171 @@ var __toModule = (module2) => {
   return __exportStar(__markAsModule(__defProp(module2 != null ? __create(__getProtoOf(module2)) : {}, "default", module2 && module2.__esModule && "default" in module2 ? {get: () => module2.default, enumerable: true} : {value: module2, enumerable: true})), module2);
 };
 
+// node_modules/source-map/lib/base64.js
+var require_base64 = __commonJS((exports2) => {
+  var intToCharMap = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split("");
+  exports2.encode = function(number) {
+    if (0 <= number && number < intToCharMap.length) {
+      return intToCharMap[number];
+    }
+    throw new TypeError("Must be between 0 and 63: " + number);
+  };
+  exports2.decode = function(charCode) {
+    var bigA = 65;
+    var bigZ = 90;
+    var littleA = 97;
+    var littleZ = 122;
+    var zero = 48;
+    var nine = 57;
+    var plus = 43;
+    var slash = 47;
+    var littleOffset = 26;
+    var numberOffset = 52;
+    if (bigA <= charCode && charCode <= bigZ) {
+      return charCode - bigA;
+    }
+    if (littleA <= charCode && charCode <= littleZ) {
+      return charCode - littleA + littleOffset;
+    }
+    if (zero <= charCode && charCode <= nine) {
+      return charCode - zero + numberOffset;
+    }
+    if (charCode == plus) {
+      return 62;
+    }
+    if (charCode == slash) {
+      return 63;
+    }
+    return -1;
+  };
+});
+
+// node_modules/source-map/lib/base64-vlq.js
+var require_base64_vlq = __commonJS((exports2) => {
+  var base64 = require_base64();
+  var VLQ_BASE_SHIFT = 5;
+  var VLQ_BASE = 1 << VLQ_BASE_SHIFT;
+  var VLQ_BASE_MASK = VLQ_BASE - 1;
+  var VLQ_CONTINUATION_BIT = VLQ_BASE;
+  function toVLQSigned(aValue) {
+    return aValue < 0 ? (-aValue << 1) + 1 : (aValue << 1) + 0;
+  }
+  function fromVLQSigned(aValue) {
+    var isNegative = (aValue & 1) === 1;
+    var shifted = aValue >> 1;
+    return isNegative ? -shifted : shifted;
+  }
+  exports2.encode = function base64VLQ_encode(aValue) {
+    var encoded = "";
+    var digit;
+    var vlq = toVLQSigned(aValue);
+    do {
+      digit = vlq & VLQ_BASE_MASK;
+      vlq >>>= VLQ_BASE_SHIFT;
+      if (vlq > 0) {
+        digit |= VLQ_CONTINUATION_BIT;
+      }
+      encoded += base64.encode(digit);
+    } while (vlq > 0);
+    return encoded;
+  };
+  exports2.decode = function base64VLQ_decode(aStr, aIndex, aOutParam) {
+    var strLen = aStr.length;
+    var result = 0;
+    var shift = 0;
+    var continuation, digit;
+    do {
+      if (aIndex >= strLen) {
+        throw new Error("Expected more digits in base 64 VLQ value.");
+      }
+      digit = base64.decode(aStr.charCodeAt(aIndex++));
+      if (digit === -1) {
+        throw new Error("Invalid base64 digit: " + aStr.charAt(aIndex - 1));
+      }
+      continuation = !!(digit & VLQ_CONTINUATION_BIT);
+      digit &= VLQ_BASE_MASK;
+      result = result + (digit << shift);
+      shift += VLQ_BASE_SHIFT;
+    } while (continuation);
+    aOutParam.value = fromVLQSigned(result);
+    aOutParam.rest = aIndex;
+  };
+});
+
+// node_modules/source-map/lib/util.js
+var require_util = __commonJS((exports2) => {
+  function getArg(aArgs, aName, aDefaultValue) {
+    if (aName in aArgs) {
+      return aArgs[aName];
+    } else if (arguments.length === 3) {
+      return aDefaultValue;
+    } else {
+      throw new Error('"' + aName + '" is a required argument.');
+    }
+  }
+  exports2.getArg = getArg;
+  var urlRegexp = /^(?:([\w+\-.]+):)?\/\/(?:(\w+:\w+)@)?([\w.-]*)(?::(\d+))?(.*)$/;
+  var dataUrlRegexp = /^data:.+\,.+$/;
+  function urlParse(aUrl) {
+    var match = aUrl.match(urlRegexp);
+    if (!match) {
+      return null;
+    }
+    return {
+      scheme: match[1],
+      auth: match[2],
+      host: match[3],
+      port: match[4],
+      path: match[5]
+    };
+  }
+  exports2.urlParse = urlParse;
+  function urlGenerate(aParsedUrl) {
+    var url = "";
+    if (aParsedUrl.scheme) {
+      url += aParsedUrl.scheme + ":";
+    }
+    url += "//";
+    if (aParsedUrl.auth) {
+      url += aParsedUrl.auth + "@";
+    }
+    if (aParsedUrl.host) {
+      url += aParsedUrl.host;
+    }
+    if (aParsedUrl.port) {
+      url += ":" + aParsedUrl.port;
+    }
+    if (aParsedUrl.path) {
+      url += aParsedUrl.path;
+    }
+    return url;
+  }
+  exports2.urlGenerate = urlGenerate;
+  function normalize(aPath) {
+    var path = aPath;
+    var url = urlParse(aPath);
+    if (url) {
+      if (!url.path) {
+        return aPath;
+      }
+      path = url.path;
+    }
+    var isAbsolute = exports2.isAbsolute(path);
+    var parts = path.split(/\/+/);
+    for (var part, up = 0, i = parts.length - 1; i >= 0; i--) {
+      part = parts[i];
+      if (part === ".") {
+        parts.splice(i, 1);
+      } else if (part === "..") {
+        up++;
+      } else if (up > 0) {
+        if (part === "") {
+          parts.splice(i + 1, up);
+          up = 0;
+        } else {
+          parts.splice(i, 2);
+          up--;
+        }
+      }
+    }
+    path = parts.join("/");
+    if (path === "") {
+      path = isAbsolute ? "/" : ".";
+    }
+    if (url) {
+      url.path = path;
+      return urlGenerate(url);
+    }
+    return path;
+  }
+  exports2.normalize = normalize;
+  function join2(aRoot, aPath) {
+    if (aRoot === "") {
+      aRoot = ".";
+    }
+    if (aPath === "") {
+      aPath = ".";
+    }
+    var aPathUrl = urlParse(aPath);
+    var aRootUrl = urlParse(aRoot);
+    if (aRootUrl) {
+      aRoot = aRootUrl.path || "/";
+    }
+    if (aPathUrl && !aPathUrl.scheme) {
+      if (aRootUrl) {
+        aPathUrl.scheme = aRootUrl.scheme;
+      }
+      return urlGenerate(aPathUrl);
+    }
+    if (aPathUrl || aPath.match(dataUrlRegexp)) {
+      return aPath;
+    }
+    if (aRootUrl && !aRootUrl.host && !aRootUrl.path) {
+      aRootUrl.host = aPath;
+      return urlGenerate(aRootUrl);
+    }
+    var joined = aPath.charAt(0) === "/" ? aPath : normalize(aRoot.replace(/\/+$/, "") + "/" + aPath);
+    if (aRootUrl) {
+      aRootUrl.path = joined;
+      return urlGenerate(aRootUrl);
+    }
+    return joined;
+  }
+  exports2.join = join2;
+  exports2.isAbsolute = function(aPath) {
+    return aPath.charAt(0) === "/" || urlRegexp.test(aPath);
+  };
+  function relative(aRoot, aPath) {
+    if (aRoot === "") {
+      aRoot = ".";
+    }
+    aRoot = aRoot.replace(/\/$/, "");
+    var level = 0;
+    while (aPath.indexOf(aRoot + "/") !== 0) {
+      var index = aRoot.lastIndexOf("/");
+      if (index < 0) {
+        return aPath;
+      }
+      aRoot = aRoot.slice(0, index);
+      if (aRoot.match(/^([^\/]+:\/)?\/*$/)) {
+        return aPath;
+      }
+      ++level;
+    }
+    return Array(level + 1).join("../") + aPath.substr(aRoot.length + 1);
+  }
+  exports2.relative = relative;
+  var supportsNullProto = function() {
+    var obj = Object.create(null);
+    return !("__proto__" in obj);
+  }();
+  function identity(s) {
+    return s;
+  }
+  function toSetString(aStr) {
+    if (isProtoString(aStr)) {
+      return "$" + aStr;
+    }
+    return aStr;
+  }
+  exports2.toSetString = supportsNullProto ? identity : toSetString;
+  function fromSetString(aStr) {
+    if (isProtoString(aStr)) {
+      return aStr.slice(1);
+    }
+    return aStr;
+  }
+  exports2.fromSetString = supportsNullProto ? identity : fromSetString;
+  function isProtoString(s) {
+    if (!s) {
+      return false;
+    }
+    var length = s.length;
+    if (length < 9) {
+      return false;
+    }
+    if (s.charCodeAt(length - 1) !== 95 || s.charCodeAt(length - 2) !== 95 || s.charCodeAt(length - 3) !== 111 || s.charCodeAt(length - 4) !== 116 || s.charCodeAt(length - 5) !== 111 || s.charCodeAt(length - 6) !== 114 || s.charCodeAt(length - 7) !== 112 || s.charCodeAt(length - 8) !== 95 || s.charCodeAt(length - 9) !== 95) {
+      return false;
+    }
+    for (var i = length - 10; i >= 0; i--) {
+      if (s.charCodeAt(i) !== 36) {
+        return false;
+      }
+    }
+    return true;
+  }
+  function compareByOriginalPositions(mappingA, mappingB, onlyCompareOriginal) {
+    var cmp = strcmp(mappingA.source, mappingB.source);
+    if (cmp !== 0) {
+      return cmp;
+    }
+    cmp = mappingA.originalLine - mappingB.originalLine;
+    if (cmp !== 0) {
+      return cmp;
+    }
+    cmp = mappingA.originalColumn - mappingB.originalColumn;
+    if (cmp !== 0 || onlyCompareOriginal) {
+      return cmp;
+    }
+    cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+    if (cmp !== 0) {
+      return cmp;
+    }
+    cmp = mappingA.generatedLine - mappingB.generatedLine;
+    if (cmp !== 0) {
+      return cmp;
+    }
+    return strcmp(mappingA.name, mappingB.name);
+  }
+  exports2.compareByOriginalPositions = compareByOriginalPositions;
+  function compareByGeneratedPositionsDeflated(mappingA, mappingB, onlyCompareGenerated) {
+    var cmp = mappingA.generatedLine - mappingB.generatedLine;
+    if (cmp !== 0) {
+      return cmp;
+    }
+    cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+    if (cmp !== 0 || onlyCompareGenerated) {
+      return cmp;
+    }
+    cmp = strcmp(mappingA.source, mappingB.source);
+    if (cmp !== 0) {
+      return cmp;
+    }
+    cmp = mappingA.originalLine - mappingB.originalLine;
+    if (cmp !== 0) {
+      return cmp;
+    }
+    cmp = mappingA.originalColumn - mappingB.originalColumn;
+    if (cmp !== 0) {
+      return cmp;
+    }
+    return strcmp(mappingA.name, mappingB.name);
+  }
+  exports2.compareByGeneratedPositionsDeflated = compareByGeneratedPositionsDeflated;
+  function strcmp(aStr1, aStr2) {
+    if (aStr1 === aStr2) {
+      return 0;
+    }
+    if (aStr1 === null) {
+      return 1;
+    }
+    if (aStr2 === null) {
+      return -1;
+    }
+    if (aStr1 > aStr2) {
+      return 1;
+    }
+    return -1;
+  }
+  function compareByGeneratedPositionsInflated(mappingA, mappingB) {
+    var cmp = mappingA.generatedLine - mappingB.generatedLine;
+    if (cmp !== 0) {
+      return cmp;
+    }
+    cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+    if (cmp !== 0) {
+      return cmp;
+    }
+    cmp = strcmp(mappingA.source, mappingB.source);
+    if (cmp !== 0) {
+      return cmp;
+    }
+    cmp = mappingA.originalLine - mappingB.originalLine;
+    if (cmp !== 0) {
+      return cmp;
+    }
+    cmp = mappingA.originalColumn - mappingB.originalColumn;
+    if (cmp !== 0) {
+      return cmp;
+    }
+    return strcmp(mappingA.name, mappingB.name);
+  }
+  exports2.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated;
+  function parseSourceMapInput(str) {
+    return JSON.parse(str.replace(/^\)]}'[^\n]*\n/, ""));
+  }
+  exports2.parseSourceMapInput = parseSourceMapInput;
+  function computeSourceURL(sourceRoot, sourceURL, sourceMapURL) {
+    sourceURL = sourceURL || "";
+    if (sourceRoot) {
+      if (sourceRoot[sourceRoot.length - 1] !== "/" && sourceURL[0] !== "/") {
+        sourceRoot += "/";
+      }
+      sourceURL = sourceRoot + sourceURL;
+    }
+    if (sourceMapURL) {
+      var parsed = urlParse(sourceMapURL);
+      if (!parsed) {
+        throw new Error("sourceMapURL could not be parsed");
+      }
+      if (parsed.path) {
+        var index = parsed.path.lastIndexOf("/");
+        if (index >= 0) {
+          parsed.path = parsed.path.substring(0, index + 1);
+        }
+      }
+      sourceURL = join2(urlGenerate(parsed), sourceURL);
+    }
+    return normalize(sourceURL);
+  }
+  exports2.computeSourceURL = computeSourceURL;
+});
+
+// node_modules/source-map/lib/array-set.js
+var require_array_set = __commonJS((exports2) => {
+  var util = require_util();
+  var has = Object.prototype.hasOwnProperty;
+  var hasNativeMap = typeof Map !== "undefined";
+  function ArraySet() {
+    this._array = [];
+    this._set = hasNativeMap ? new Map() : Object.create(null);
+  }
+  ArraySet.fromArray = function ArraySet_fromArray(aArray, aAllowDuplicates) {
+    var set = new ArraySet();
+    for (var i = 0, len = aArray.length; i < len; i++) {
+      set.add(aArray[i], aAllowDuplicates);
+    }
+    return set;
+  };
+  ArraySet.prototype.size = function ArraySet_size() {
+    return hasNativeMap ? this._set.size : Object.getOwnPropertyNames(this._set).length;
+  };
+  ArraySet.prototype.add = function ArraySet_add(aStr, aAllowDuplicates) {
+    var sStr = hasNativeMap ? aStr : util.toSetString(aStr);
+    var isDuplicate = hasNativeMap ? this.has(aStr) : has.call(this._set, sStr);
+    var idx = this._array.length;
+    if (!isDuplicate || aAllowDuplicates) {
+      this._array.push(aStr);
+    }
+    if (!isDuplicate) {
+      if (hasNativeMap) {
+        this._set.set(aStr, idx);
+      } else {
+        this._set[sStr] = idx;
+      }
+    }
+  };
+  ArraySet.prototype.has = function ArraySet_has(aStr) {
+    if (hasNativeMap) {
+      return this._set.has(aStr);
+    } else {
+      var sStr = util.toSetString(aStr);
+      return has.call(this._set, sStr);
+    }
+  };
+  ArraySet.prototype.indexOf = function ArraySet_indexOf(aStr) {
+    if (hasNativeMap) {
+      var idx = this._set.get(aStr);
+      if (idx >= 0) {
+        return idx;
+      }
+    } else {
+      var sStr = util.toSetString(aStr);
+      if (has.call(this._set, sStr)) {
+        return this._set[sStr];
+      }
+    }
+    throw new Error('"' + aStr + '" is not in the set.');
+  };
+  ArraySet.prototype.at = function ArraySet_at(aIdx) {
+    if (aIdx >= 0 && aIdx < this._array.length) {
+      return this._array[aIdx];
+    }
+    throw new Error("No element indexed by " + aIdx);
+  };
+  ArraySet.prototype.toArray = function ArraySet_toArray() {
+    return this._array.slice();
+  };
+  exports2.ArraySet = ArraySet;
+});
+
+// node_modules/source-map/lib/mapping-list.js
+var require_mapping_list = __commonJS((exports2) => {
+  var util = require_util();
+  function generatedPositionAfter(mappingA, mappingB) {
+    var lineA = mappingA.generatedLine;
+    var lineB = mappingB.generatedLine;
+    var columnA = mappingA.generatedColumn;
+    var columnB = mappingB.generatedColumn;
+    return lineB > lineA || lineB == lineA && columnB >= columnA || util.compareByGeneratedPositionsInflated(mappingA, mappingB) <= 0;
+  }
+  function MappingList() {
+    this._array = [];
+    this._sorted = true;
+    this._last = {generatedLine: -1, generatedColumn: 0};
+  }
+  MappingList.prototype.unsortedForEach = function MappingList_forEach(aCallback, aThisArg) {
+    this._array.forEach(aCallback, aThisArg);
+  };
+  MappingList.prototype.add = function MappingList_add(aMapping) {
+    if (generatedPositionAfter(this._last, aMapping)) {
+      this._last = aMapping;
+      this._array.push(aMapping);
+    } else {
+      this._sorted = false;
+      this._array.push(aMapping);
+    }
+  };
+  MappingList.prototype.toArray = function MappingList_toArray() {
+    if (!this._sorted) {
+      this._array.sort(util.compareByGeneratedPositionsInflated);
+      this._sorted = true;
+    }
+    return this._array;
+  };
+  exports2.MappingList = MappingList;
+});
+
+// node_modules/source-map/lib/source-map-generator.js
+var require_source_map_generator = __commonJS((exports2) => {
+  var base64VLQ = require_base64_vlq();
+  var util = require_util();
+  var ArraySet = require_array_set().ArraySet;
+  var MappingList = require_mapping_list().MappingList;
+  function SourceMapGenerator(aArgs) {
+    if (!aArgs) {
+      aArgs = {};
+    }
+    this._file = util.getArg(aArgs, "file", null);
+    this._sourceRoot = util.getArg(aArgs, "sourceRoot", null);
+    this._skipValidation = util.getArg(aArgs, "skipValidation", false);
+    this._sources = new ArraySet();
+    this._names = new ArraySet();
+    this._mappings = new MappingList();
+    this._sourcesContents = null;
+  }
+  SourceMapGenerator.prototype._version = 3;
+  SourceMapGenerator.fromSourceMap = function SourceMapGenerator_fromSourceMap(aSourceMapConsumer) {
+    var sourceRoot = aSourceMapConsumer.sourceRoot;
+    var generator = new SourceMapGenerator({
+      file: aSourceMapConsumer.file,
+      sourceRoot
+    });
+    aSourceMapConsumer.eachMapping(function(mapping) {
+      var newMapping = {
+        generated: {
+          line: mapping.generatedLine,
+          column: mapping.generatedColumn
+        }
+      };
+      if (mapping.source != null) {
+        newMapping.source = mapping.source;
+        if (sourceRoot != null) {
+          newMapping.source = util.relative(sourceRoot, newMapping.source);
+        }
+        newMapping.original = {
+          line: mapping.originalLine,
+          column: mapping.originalColumn
+        };
+        if (mapping.name != null) {
+          newMapping.name = mapping.name;
+        }
+      }
+      generator.addMapping(newMapping);
+    });
+    aSourceMapConsumer.sources.forEach(function(sourceFile) {
+      var sourceRelative = sourceFile;
+      if (sourceRoot !== null) {
+        sourceRelative = util.relative(sourceRoot, sourceFile);
+      }
+      if (!generator._sources.has(sourceRelative)) {
+        generator._sources.add(sourceRelative);
+      }
+      var content = aSourceMapConsumer.sourceContentFor(sourceFile);
+      if (content != null) {
+        generator.setSourceContent(sourceFile, content);
+      }
+    });
+    return generator;
+  };
+  SourceMapGenerator.prototype.addMapping = function SourceMapGenerator_addMapping(aArgs) {
+    var generated = util.getArg(aArgs, "generated");
+    var original = util.getArg(aArgs, "original", null);
+    var source = util.getArg(aArgs, "source", null);
+    var name = util.getArg(aArgs, "name", null);
+    if (!this._skipValidation) {
+      this._validateMapping(generated, original, source, name);
+    }
+    if (source != null) {
+      source = String(source);
+      if (!this._sources.has(source)) {
+        this._sources.add(source);
+      }
+    }
+    if (name != null) {
+      name = String(name);
+      if (!this._names.has(name)) {
+        this._names.add(name);
+      }
+    }
+    this._mappings.add({
+      generatedLine: generated.line,
+      generatedColumn: generated.column,
+      originalLine: original != null && original.line,
+      originalColumn: original != null && original.column,
+      source,
+      name
+    });
+  };
+  SourceMapGenerator.prototype.setSourceContent = function SourceMapGenerator_setSourceContent(aSourceFile, aSourceContent) {
+    var source = aSourceFile;
+    if (this._sourceRoot != null) {
+      source = util.relative(this._sourceRoot, source);
+    }
+    if (aSourceContent != null) {
+      if (!this._sourcesContents) {
+        this._sourcesContents = Object.create(null);
+      }
+      this._sourcesContents[util.toSetString(source)] = aSourceContent;
+    } else if (this._sourcesContents) {
+      delete this._sourcesContents[util.toSetString(source)];
+      if (Object.keys(this._sourcesContents).length === 0) {
+        this._sourcesContents = null;
+      }
+    }
+  };
+  SourceMapGenerator.prototype.applySourceMap = function SourceMapGenerator_applySourceMap(aSourceMapConsumer, aSourceFile, aSourceMapPath) {
+    var sourceFile = aSourceFile;
+    if (aSourceFile == null) {
+      if (aSourceMapConsumer.file == null) {
+        throw new Error(`SourceMapGenerator.prototype.applySourceMap requires either an explicit source file, or the source map's "file" property. Both were omitted.`);
+      }
+      sourceFile = aSourceMapConsumer.file;
+    }
+    var sourceRoot = this._sourceRoot;
+    if (sourceRoot != null) {
+      sourceFile = util.relative(sourceRoot, sourceFile);
+    }
+    var newSources = new ArraySet();
+    var newNames = new ArraySet();
+    this._mappings.unsortedForEach(function(mapping) {
+      if (mapping.source === sourceFile && mapping.originalLine != null) {
+        var original = aSourceMapConsumer.originalPositionFor({
+          line: mapping.originalLine,
+          column: mapping.originalColumn
+        });
+        if (original.source != null) {
+          mapping.source = original.source;
+          if (aSourceMapPath != null) {
+            mapping.source = util.join(aSourceMapPath, mapping.source);
+          }
+          if (sourceRoot != null) {
+            mapping.source = util.relative(sourceRoot, mapping.source);
+          }
+          mapping.originalLine = original.line;
+          mapping.originalColumn = original.column;
+          if (original.name != null) {
+            mapping.name = original.name;
+          }
+        }
+      }
+      var source = mapping.source;
+      if (source != null && !newSources.has(source)) {
+        newSources.add(source);
+      }
+      var name = mapping.name;
+      if (name != null && !newNames.has(name)) {
+        newNames.add(name);
+      }
+    }, this);
+    this._sources = newSources;
+    this._names = newNames;
+    aSourceMapConsumer.sources.forEach(function(sourceFile2) {
+      var content = aSourceMapConsumer.sourceContentFor(sourceFile2);
+      if (content != null) {
+        if (aSourceMapPath != null) {
+          sourceFile2 = util.join(aSourceMapPath, sourceFile2);
+        }
+        if (sourceRoot != null) {
+          sourceFile2 = util.relative(sourceRoot, sourceFile2);
+        }
+        this.setSourceContent(sourceFile2, content);
+      }
+    }, this);
+  };
+  SourceMapGenerator.prototype._validateMapping = function SourceMapGenerator_validateMapping(aGenerated, aOriginal, aSource, aName) {
+    if (aOriginal && typeof aOriginal.line !== "number" && typeof aOriginal.column !== "number") {
+      throw new Error("original.line and original.column are not numbers -- you probably meant to omit the original mapping entirely and only map the generated position. If so, pass null for the original mapping instead of an object with empty or null values.");
+    }
+    if (aGenerated && "line" in aGenerated && "column" in aGenerated && aGenerated.line > 0 && aGenerated.column >= 0 && !aOriginal && !aSource && !aName) {
+      return;
+    } else if (aGenerated && "line" in aGenerated && "column" in aGenerated && aOriginal && "line" in aOriginal && "column" in aOriginal && aGenerated.line > 0 && aGenerated.column >= 0 && aOriginal.line > 0 && aOriginal.column >= 0 && aSource) {
+      return;
+    } else {
+      throw new Error("Invalid mapping: " + JSON.stringify({
+        generated: aGenerated,
+        source: aSource,
+        original: aOriginal,
+        name: aName
+      }));
+    }
+  };
+  SourceMapGenerator.prototype._serializeMappings = function SourceMapGenerator_serializeMappings() {
+    var previousGeneratedColumn = 0;
+    var previousGeneratedLine = 1;
+    var previousOriginalColumn = 0;
+    var previousOriginalLine = 0;
+    var previousName = 0;
+    var previousSource = 0;
+    var result = "";
+    var next;
+    var mapping;
+    var nameIdx;
+    var sourceIdx;
+    var mappings = this._mappings.toArray();
+    for (var i = 0, len = mappings.length; i < len; i++) {
+      mapping = mappings[i];
+      next = "";
+      if (mapping.generatedLine !== previousGeneratedLine) {
+        previousGeneratedColumn = 0;
+        while (mapping.generatedLine !== previousGeneratedLine) {
+          next += ";";
+          previousGeneratedLine++;
+        }
+      } else {
+        if (i > 0) {
+          if (!util.compareByGeneratedPositionsInflated(mapping, mappings[i - 1])) {
+            continue;
+          }
+          next += ",";
+        }
+      }
+      next += base64VLQ.encode(mapping.generatedColumn - previousGeneratedColumn);
+      previousGeneratedColumn = mapping.generatedColumn;
+      if (mapping.source != null) {
+        sourceIdx = this._sources.indexOf(mapping.source);
+        next += base64VLQ.encode(sourceIdx - previousSource);
+        previousSource = sourceIdx;
+        next += base64VLQ.encode(mapping.originalLine - 1 - previousOriginalLine);
+        previousOriginalLine = mapping.originalLine - 1;
+        next += base64VLQ.encode(mapping.originalColumn - previousOriginalColumn);
+        previousOriginalColumn = mapping.originalColumn;
+        if (mapping.name != null) {
+          nameIdx = this._names.indexOf(mapping.name);
+          next += base64VLQ.encode(nameIdx - previousName);
+          previousName = nameIdx;
+        }
+      }
+      result += next;
+    }
+    return result;
+  };
+  SourceMapGenerator.prototype._generateSourcesContent = function SourceMapGenerator_generateSourcesContent(aSources, aSourceRoot) {
+    return aSources.map(function(source) {
+      if (!this._sourcesContents) {
+        return null;
+      }
+      if (aSourceRoot != null) {
+        source = util.relative(aSourceRoot, source);
+      }
+      var key = util.toSetString(source);
+      return Object.prototype.hasOwnProperty.call(this._sourcesContents, key) ? this._sourcesContents[key] : null;
+    }, this);
+  };
+  SourceMapGenerator.prototype.toJSON = function SourceMapGenerator_toJSON() {
+    var map = {
+      version: this._version,
+      sources: this._sources.toArray(),
+      names: this._names.toArray(),
+      mappings: this._serializeMappings()
+    };
+    if (this._file != null) {
+      map.file = this._file;
+    }
+    if (this._sourceRoot != null) {
+      map.sourceRoot = this._sourceRoot;
+    }
+    if (this._sourcesContents) {
+      map.sourcesContent = this._generateSourcesContent(map.sources, map.sourceRoot);
+    }
+    return map;
+  };
+  SourceMapGenerator.prototype.toString = function SourceMapGenerator_toString() {
+    return JSON.stringify(this.toJSON());
+  };
+  exports2.SourceMapGenerator = SourceMapGenerator;
+});
+
+// node_modules/source-map/lib/binary-search.js
+var require_binary_search = __commonJS((exports2) => {
+  exports2.GREATEST_LOWER_BOUND = 1;
+  exports2.LEAST_UPPER_BOUND = 2;
+  function recursiveSearch(aLow, aHigh, aNeedle, aHaystack, aCompare, aBias) {
+    var mid = Math.floor((aHigh - aLow) / 2) + aLow;
+    var cmp = aCompare(aNeedle, aHaystack[mid], true);
+    if (cmp === 0) {
+      return mid;
+    } else if (cmp > 0) {
+      if (aHigh - mid > 1) {
+        return recursiveSearch(mid, aHigh, aNeedle, aHaystack, aCompare, aBias);
+      }
+      if (aBias == exports2.LEAST_UPPER_BOUND) {
+        return aHigh < aHaystack.length ? aHigh : -1;
+      } else {
+        return mid;
+      }
+    } else {
+      if (mid - aLow > 1) {
+        return recursiveSearch(aLow, mid, aNeedle, aHaystack, aCompare, aBias);
+      }
+      if (aBias == exports2.LEAST_UPPER_BOUND) {
+        return mid;
+      } else {
+        return aLow < 0 ? -1 : aLow;
+      }
+    }
+  }
+  exports2.search = function search(aNeedle, aHaystack, aCompare, aBias) {
+    if (aHaystack.length === 0) {
+      return -1;
+    }
+    var index = recursiveSearch(-1, aHaystack.length, aNeedle, aHaystack, aCompare, aBias || exports2.GREATEST_LOWER_BOUND);
+    if (index < 0) {
+      return -1;
+    }
+    while (index - 1 >= 0) {
+      if (aCompare(aHaystack[index], aHaystack[index - 1], true) !== 0) {
+        break;
+      }
+      --index;
+    }
+    return index;
+  };
+});
+
+// node_modules/source-map/lib/quick-sort.js
+var require_quick_sort = __commonJS((exports2) => {
+  function swap(ary, x, y) {
+    var temp = ary[x];
+    ary[x] = ary[y];
+    ary[y] = temp;
+  }
+  function randomIntInRange(low, high) {
+    return Math.round(low + Math.random() * (high - low));
+  }
+  function doQuickSort(ary, comparator, p, r) {
+    if (p < r) {
+      var pivotIndex = randomIntInRange(p, r);
+      var i = p - 1;
+      swap(ary, pivotIndex, r);
+      var pivot = ary[r];
+      for (var j = p; j < r; j++) {
+        if (comparator(ary[j], pivot) <= 0) {
+          i += 1;
+          swap(ary, i, j);
+        }
+      }
+      swap(ary, i + 1, j);
+      var q = i + 1;
+      doQuickSort(ary, comparator, p, q - 1);
+      doQuickSort(ary, comparator, q + 1, r);
+    }
+  }
+  exports2.quickSort = function(ary, comparator) {
+    doQuickSort(ary, comparator, 0, ary.length - 1);
+  };
+});
+
+// node_modules/source-map/lib/source-map-consumer.js
+var require_source_map_consumer = __commonJS((exports2) => {
+  var util = require_util();
+  var binarySearch = require_binary_search();
+  var ArraySet = require_array_set().ArraySet;
+  var base64VLQ = require_base64_vlq();
+  var quickSort = require_quick_sort().quickSort;
+  function SourceMapConsumer(aSourceMap, aSourceMapURL) {
+    var sourceMap = aSourceMap;
+    if (typeof aSourceMap === "string") {
+      sourceMap = util.parseSourceMapInput(aSourceMap);
+    }
+    return sourceMap.sections != null ? new IndexedSourceMapConsumer(sourceMap, aSourceMapURL) : new BasicSourceMapConsumer(sourceMap, aSourceMapURL);
+  }
+  SourceMapConsumer.fromSourceMap = function(aSourceMap, aSourceMapURL) {
+    return BasicSourceMapConsumer.fromSourceMap(aSourceMap, aSourceMapURL);
+  };
+  SourceMapConsumer.prototype._version = 3;
+  SourceMapConsumer.prototype.__generatedMappings = null;
+  Object.defineProperty(SourceMapConsumer.prototype, "_generatedMappings", {
+    configurable: true,
+    enumerable: true,
+    get: function() {
+      if (!this.__generatedMappings) {
+        this._parseMappings(this._mappings, this.sourceRoot);
+      }
+      return this.__generatedMappings;
+    }
+  });
+  SourceMapConsumer.prototype.__originalMappings = null;
+  Object.defineProperty(SourceMapConsumer.prototype, "_originalMappings", {
+    configurable: true,
+    enumerable: true,
+    get: function() {
+      if (!this.__originalMappings) {
+        this._parseMappings(this._mappings, this.sourceRoot);
+      }
+      return this.__originalMappings;
+    }
+  });
+  SourceMapConsumer.prototype._charIsMappingSeparator = function SourceMapConsumer_charIsMappingSeparator(aStr, index) {
+    var c = aStr.charAt(index);
+    return c === ";" || c === ",";
+  };
+  SourceMapConsumer.prototype._parseMappings = function SourceMapConsumer_parseMappings(aStr, aSourceRoot) {
+    throw new Error("Subclasses must implement _parseMappings");
+  };
+  SourceMapConsumer.GENERATED_ORDER = 1;
+  SourceMapConsumer.ORIGINAL_ORDER = 2;
+  SourceMapConsumer.GREATEST_LOWER_BOUND = 1;
+  SourceMapConsumer.LEAST_UPPER_BOUND = 2;
+  SourceMapConsumer.prototype.eachMapping = function SourceMapConsumer_eachMapping(aCallback, aContext, aOrder) {
+    var context = aContext || null;
+    var order = aOrder || SourceMapConsumer.GENERATED_ORDER;
+    var mappings;
+    switch (order) {
+      case SourceMapConsumer.GENERATED_ORDER:
+        mappings = this._generatedMappings;
+        break;
+      case SourceMapConsumer.ORIGINAL_ORDER:
+        mappings = this._originalMappings;
+        break;
+      default:
+        throw new Error("Unknown order of iteration.");
+    }
+    var sourceRoot = this.sourceRoot;
+    mappings.map(function(mapping) {
+      var source = mapping.source === null ? null : this._sources.at(mapping.source);
+      source = util.computeSourceURL(sourceRoot, source, this._sourceMapURL);
+      return {
+        source,
+        generatedLine: mapping.generatedLine,
+        generatedColumn: mapping.generatedColumn,
+        originalLine: mapping.originalLine,
+        originalColumn: mapping.originalColumn,
+        name: mapping.name === null ? null : this._names.at(mapping.name)
+      };
+    }, this).forEach(aCallback, context);
+  };
+  SourceMapConsumer.prototype.allGeneratedPositionsFor = function SourceMapConsumer_allGeneratedPositionsFor(aArgs) {
+    var line = util.getArg(aArgs, "line");
+    var needle = {
+      source: util.getArg(aArgs, "source"),
+      originalLine: line,
+      originalColumn: util.getArg(aArgs, "column", 0)
+    };
+    needle.source = this._findSourceIndex(needle.source);
+    if (needle.source < 0) {
+      return [];
+    }
+    var mappings = [];
+    var index = this._findMapping(needle, this._originalMappings, "originalLine", "originalColumn", util.compareByOriginalPositions, binarySearch.LEAST_UPPER_BOUND);
+    if (index >= 0) {
+      var mapping = this._originalMappings[index];
+      if (aArgs.column === void 0) {
+        var originalLine = mapping.originalLine;
+        while (mapping && mapping.originalLine === originalLine) {
+          mappings.push({
+            line: util.getArg(mapping, "generatedLine", null),
+            column: util.getArg(mapping, "generatedColumn", null),
+            lastColumn: util.getArg(mapping, "lastGeneratedColumn", null)
+          });
+          mapping = this._originalMappings[++index];
+        }
+      } else {
+        var originalColumn = mapping.originalColumn;
+        while (mapping && mapping.originalLine === line && mapping.originalColumn == originalColumn) {
+          mappings.push({
+            line: util.getArg(mapping, "generatedLine", null),
+            column: util.getArg(mapping, "generatedColumn", null),
+            lastColumn: util.getArg(mapping, "lastGeneratedColumn", null)
+          });
+          mapping = this._originalMappings[++index];
+        }
+      }
+    }
+    return mappings;
+  };
+  exports2.SourceMapConsumer = SourceMapConsumer;
+  function BasicSourceMapConsumer(aSourceMap, aSourceMapURL) {
+    var sourceMap = aSourceMap;
+    if (typeof aSourceMap === "string") {
+      sourceMap = util.parseSourceMapInput(aSourceMap);
+    }
+    var version = util.getArg(sourceMap, "version");
+    var sources = util.getArg(sourceMap, "sources");
+    var names = util.getArg(sourceMap, "names", []);
+    var sourceRoot = util.getArg(sourceMap, "sourceRoot", null);
+    var sourcesContent = util.getArg(sourceMap, "sourcesContent", null);
+    var mappings = util.getArg(sourceMap, "mappings");
+    var file = util.getArg(sourceMap, "file", null);
+    if (version != this._version) {
+      throw new Error("Unsupported version: " + version);
+    }
+    if (sourceRoot) {
+      sourceRoot = util.normalize(sourceRoot);
+    }
+    sources = sources.map(String).map(util.normalize).map(function(source) {
+      return sourceRoot && util.isAbsolute(sourceRoot) && util.isAbsolute(source) ? util.relative(sourceRoot, source) : source;
+    });
+    this._names = ArraySet.fromArray(names.map(String), true);
+    this._sources = ArraySet.fromArray(sources, true);
+    this._absoluteSources = this._sources.toArray().map(function(s) {
+      return util.computeSourceURL(sourceRoot, s, aSourceMapURL);
+    });
+    this.sourceRoot = sourceRoot;
+    this.sourcesContent = sourcesContent;
+    this._mappings = mappings;
+    this._sourceMapURL = aSourceMapURL;
+    this.file = file;
+  }
+  BasicSourceMapConsumer.prototype = Object.create(SourceMapConsumer.prototype);
+  BasicSourceMapConsumer.prototype.consumer = SourceMapConsumer;
+  BasicSourceMapConsumer.prototype._findSourceIndex = function(aSource) {
+    var relativeSource = aSource;
+    if (this.sourceRoot != null) {
+      relativeSource = util.relative(this.sourceRoot, relativeSource);
+    }
+    if (this._sources.has(relativeSource)) {
+      return this._sources.indexOf(relativeSource);
+    }
+    var i;
+    for (i = 0; i < this._absoluteSources.length; ++i) {
+      if (this._absoluteSources[i] == aSource) {
+        return i;
+      }
+    }
+    return -1;
+  };
+  BasicSourceMapConsumer.fromSourceMap = function SourceMapConsumer_fromSourceMap(aSourceMap, aSourceMapURL) {
+    var smc = Object.create(BasicSourceMapConsumer.prototype);
+    var names = smc._names = ArraySet.fromArray(aSourceMap._names.toArray(), true);
+    var sources = smc._sources = ArraySet.fromArray(aSourceMap._sources.toArray(), true);
+    smc.sourceRoot = aSourceMap._sourceRoot;
+    smc.sourcesContent = aSourceMap._generateSourcesContent(smc._sources.toArray(), smc.sourceRoot);
+    smc.file = aSourceMap._file;
+    smc._sourceMapURL = aSourceMapURL;
+    smc._absoluteSources = smc._sources.toArray().map(function(s) {
+      return util.computeSourceURL(smc.sourceRoot, s, aSourceMapURL);
+    });
+    var generatedMappings = aSourceMap._mappings.toArray().slice();
+    var destGeneratedMappings = smc.__generatedMappings = [];
+    var destOriginalMappings = smc.__originalMappings = [];
+    for (var i = 0, length = generatedMappings.length; i < length; i++) {
+      var srcMapping = generatedMappings[i];
+      var destMapping = new Mapping();
+      destMapping.generatedLine = srcMapping.generatedLine;
+      destMapping.generatedColumn = srcMapping.generatedColumn;
+      if (srcMapping.source) {
+        destMapping.source = sources.indexOf(srcMapping.source);
+        destMapping.originalLine = srcMapping.originalLine;
+        destMapping.originalColumn = srcMapping.originalColumn;
+        if (srcMapping.name) {
+          destMapping.name = names.indexOf(srcMapping.name);
+        }
+        destOriginalMappings.push(destMapping);
+      }
+      destGeneratedMappings.push(destMapping);
+    }
+    quickSort(smc.__originalMappings, util.compareByOriginalPositions);
+    return smc;
+  };
+  BasicSourceMapConsumer.prototype._version = 3;
+  Object.defineProperty(BasicSourceMapConsumer.prototype, "sources", {
+    get: function() {
+      return this._absoluteSources.slice();
+    }
+  });
+  function Mapping() {
+    this.generatedLine = 0;
+    this.generatedColumn = 0;
+    this.source = null;
+    this.originalLine = null;
+    this.originalColumn = null;
+    this.name = null;
+  }
+  BasicSourceMapConsumer.prototype._parseMappings = function SourceMapConsumer_parseMappings(aStr, aSourceRoot) {
+    var generatedLine = 1;
+    var previousGeneratedColumn = 0;
+    var previousOriginalLine = 0;
+    var previousOriginalColumn = 0;
+    var previousSource = 0;
+    var previousName = 0;
+    var length = aStr.length;
+    var index = 0;
+    var cachedSegments = {};
+    var temp = {};
+    var originalMappings = [];
+    var generatedMappings = [];
+    var mapping, str, segment, end, value;
+    while (index < length) {
+      if (aStr.charAt(index) === ";") {
+        generatedLine++;
+        index++;
+        previousGeneratedColumn = 0;
+      } else if (aStr.charAt(index) === ",") {
+        index++;
+      } else {
+        mapping = new Mapping();
+        mapping.generatedLine = generatedLine;
+        for (end = index; end < length; end++) {
+          if (this._charIsMappingSeparator(aStr, end)) {
+            break;
+          }
+        }
+        str = aStr.slice(index, end);
+        segment = cachedSegments[str];
+        if (segment) {
+          index += str.length;
+        } else {
+          segment = [];
+          while (index < end) {
+            base64VLQ.decode(aStr, index, temp);
+            value = temp.value;
+            index = temp.rest;
+            segment.push(value);
+          }
+          if (segment.length === 2) {
+            throw new Error("Found a source, but no line and column");
+          }
+          if (segment.length === 3) {
+            throw new Error("Found a source and line, but no column");
+          }
+          cachedSegments[str] = segment;
+        }
+        mapping.generatedColumn = previousGeneratedColumn + segment[0];
+        previousGeneratedColumn = mapping.generatedColumn;
+        if (segment.length > 1) {
+          mapping.source = previousSource + segment[1];
+          previousSource += segment[1];
+          mapping.originalLine = previousOriginalLine + segment[2];
+          previousOriginalLine = mapping.originalLine;
+          mapping.originalLine += 1;
+          mapping.originalColumn = previousOriginalColumn + segment[3];
+          previousOriginalColumn = mapping.originalColumn;
+          if (segment.length > 4) {
+            mapping.name = previousName + segment[4];
+            previousName += segment[4];
+          }
+        }
+        generatedMappings.push(mapping);
+        if (typeof mapping.originalLine === "number") {
+          originalMappings.push(mapping);
+        }
+      }
+    }
+    quickSort(generatedMappings, util.compareByGeneratedPositionsDeflated);
+    this.__generatedMappings = generatedMappings;
+    quickSort(originalMappings, util.compareByOriginalPositions);
+    this.__originalMappings = originalMappings;
+  };
+  BasicSourceMapConsumer.prototype._findMapping = function SourceMapConsumer_findMapping(aNeedle, aMappings, aLineName, aColumnName, aComparator, aBias) {
+    if (aNeedle[aLineName] <= 0) {
+      throw new TypeError("Line must be greater than or equal to 1, got " + aNeedle[aLineName]);
+    }
+    if (aNeedle[aColumnName] < 0) {
+      throw new TypeError("Column must be greater than or equal to 0, got " + aNeedle[aColumnName]);
+    }
+    return binarySearch.search(aNeedle, aMappings, aComparator, aBias);
+  };
+  BasicSourceMapConsumer.prototype.computeColumnSpans = function SourceMapConsumer_computeColumnSpans() {
+    for (var index = 0; index < this._generatedMappings.length; ++index) {
+      var mapping = this._generatedMappings[index];
+      if (index + 1 < this._generatedMappings.length) {
+        var nextMapping = this._generatedMappings[index + 1];
+        if (mapping.generatedLine === nextMapping.generatedLine) {
+          mapping.lastGeneratedColumn = nextMapping.generatedColumn - 1;
+          continue;
+        }
+      }
+      mapping.lastGeneratedColumn = Infinity;
+    }
+  };
+  BasicSourceMapConsumer.prototype.originalPositionFor = function SourceMapConsumer_originalPositionFor(aArgs) {
+    var needle = {
+      generatedLine: util.getArg(aArgs, "line"),
+      generatedColumn: util.getArg(aArgs, "column")
+    };
+    var index = this._findMapping(needle, this._generatedMappings, "generatedLine", "generatedColumn", util.compareByGeneratedPositionsDeflated, util.getArg(aArgs, "bias", SourceMapConsumer.GREATEST_LOWER_BOUND));
+    if (index >= 0) {
+      var mapping = this._generatedMappings[index];
+      if (mapping.generatedLine === needle.generatedLine) {
+        var source = util.getArg(mapping, "source", null);
+        if (source !== null) {
+          source = this._sources.at(source);
+          source = util.computeSourceURL(this.sourceRoot, source, this._sourceMapURL);
+        }
+        var name = util.getArg(mapping, "name", null);
+        if (name !== null) {
+          name = this._names.at(name);
+        }
+        return {
+          source,
+          line: util.getArg(mapping, "originalLine", null),
+          column: util.getArg(mapping, "originalColumn", null),
+          name
+        };
+      }
+    }
+    return {
+      source: null,
+      line: null,
+      column: null,
+      name: null
+    };
+  };
+  BasicSourceMapConsumer.prototype.hasContentsOfAllSources = function BasicSourceMapConsumer_hasContentsOfAllSources() {
+    if (!this.sourcesContent) {
+      return false;
+    }
+    return this.sourcesContent.length >= this._sources.size() && !this.sourcesContent.some(function(sc) {
+      return sc == null;
+    });
+  };
+  BasicSourceMapConsumer.prototype.sourceContentFor = function SourceMapConsumer_sourceContentFor(aSource, nullOnMissing) {
+    if (!this.sourcesContent) {
+      return null;
+    }
+    var index = this._findSourceIndex(aSource);
+    if (index >= 0) {
+      return this.sourcesContent[index];
+    }
+    var relativeSource = aSource;
+    if (this.sourceRoot != null) {
+      relativeSource = util.relative(this.sourceRoot, relativeSource);
+    }
+    var url;
+    if (this.sourceRoot != null && (url = util.urlParse(this.sourceRoot))) {
+      var fileUriAbsPath = relativeSource.replace(/^file:\/\//, "");
+      if (url.scheme == "file" && this._sources.has(fileUriAbsPath)) {
+        return this.sourcesContent[this._sources.indexOf(fileUriAbsPath)];
+      }
+      if ((!url.path || url.path == "/") && this._sources.has("/" + relativeSource)) {
+        return this.sourcesContent[this._sources.indexOf("/" + relativeSource)];
+      }
+    }
+    if (nullOnMissing) {
+      return null;
+    } else {
+      throw new Error('"' + relativeSource + '" is not in the SourceMap.');
+    }
+  };
+  BasicSourceMapConsumer.prototype.generatedPositionFor = function SourceMapConsumer_generatedPositionFor(aArgs) {
+    var source = util.getArg(aArgs, "source");
+    source = this._findSourceIndex(source);
+    if (source < 0) {
+      return {
+        line: null,
+        column: null,
+        lastColumn: null
+      };
+    }
+    var needle = {
+      source,
+      originalLine: util.getArg(aArgs, "line"),
+      originalColumn: util.getArg(aArgs, "column")
+    };
+    var index = this._findMapping(needle, this._originalMappings, "originalLine", "originalColumn", util.compareByOriginalPositions, util.getArg(aArgs, "bias", SourceMapConsumer.GREATEST_LOWER_BOUND));
+    if (index >= 0) {
+      var mapping = this._originalMappings[index];
+      if (mapping.source === needle.source) {
+        return {
+          line: util.getArg(mapping, "generatedLine", null),
+          column: util.getArg(mapping, "generatedColumn", null),
+          lastColumn: util.getArg(mapping, "lastGeneratedColumn", null)
+        };
+      }
+    }
+    return {
+      line: null,
+      column: null,
+      lastColumn: null
+    };
+  };
+  exports2.BasicSourceMapConsumer = BasicSourceMapConsumer;
+  function IndexedSourceMapConsumer(aSourceMap, aSourceMapURL) {
+    var sourceMap = aSourceMap;
+    if (typeof aSourceMap === "string") {
+      sourceMap = util.parseSourceMapInput(aSourceMap);
+    }
+    var version = util.getArg(sourceMap, "version");
+    var sections = util.getArg(sourceMap, "sections");
+    if (version != this._version) {
+      throw new Error("Unsupported version: " + version);
+    }
+    this._sources = new ArraySet();
+    this._names = new ArraySet();
+    var lastOffset = {
+      line: -1,
+      column: 0
+    };
+    this._sections = sections.map(function(s) {
+      if (s.url) {
+        throw new Error("Support for url field in sections not implemented.");
+      }
+      var offset = util.getArg(s, "offset");
+      var offsetLine = util.getArg(offset, "line");
+      var offsetColumn = util.getArg(offset, "column");
+      if (offsetLine < lastOffset.line || offsetLine === lastOffset.line && offsetColumn < lastOffset.column) {
+        throw new Error("Section offsets must be ordered and non-overlapping.");
+      }
+      lastOffset = offset;
+      return {
+        generatedOffset: {
+          generatedLine: offsetLine + 1,
+          generatedColumn: offsetColumn + 1
+        },
+        consumer: new SourceMapConsumer(util.getArg(s, "map"), aSourceMapURL)
+      };
+    });
+  }
+  IndexedSourceMapConsumer.prototype = Object.create(SourceMapConsumer.prototype);
+  IndexedSourceMapConsumer.prototype.constructor = SourceMapConsumer;
+  IndexedSourceMapConsumer.prototype._version = 3;
+  Object.defineProperty(IndexedSourceMapConsumer.prototype, "sources", {
+    get: function() {
+      var sources = [];
+      for (var i = 0; i < this._sections.length; i++) {
+        for (var j = 0; j < this._sections[i].consumer.sources.length; j++) {
+          sources.push(this._sections[i].consumer.sources[j]);
+        }
+      }
+      return sources;
+    }
+  });
+  IndexedSourceMapConsumer.prototype.originalPositionFor = function IndexedSourceMapConsumer_originalPositionFor(aArgs) {
+    var needle = {
+      generatedLine: util.getArg(aArgs, "line"),
+      generatedColumn: util.getArg(aArgs, "column")
+    };
+    var sectionIndex = binarySearch.search(needle, this._sections, function(needle2, section2) {
+      var cmp = needle2.generatedLine - section2.generatedOffset.generatedLine;
+      if (cmp) {
+        return cmp;
+      }
+      return needle2.generatedColumn - section2.generatedOffset.generatedColumn;
+    });
+    var section = this._sections[sectionIndex];
+    if (!section) {
+      return {
+        source: null,
+        line: null,
+        column: null,
+        name: null
+      };
+    }
+    return section.consumer.originalPositionFor({
+      line: needle.generatedLine - (section.generatedOffset.generatedLine - 1),
+      column: needle.generatedColumn - (section.generatedOffset.generatedLine === needle.generatedLine ? section.generatedOffset.generatedColumn - 1 : 0),
+      bias: aArgs.bias
+    });
+  };
+  IndexedSourceMapConsumer.prototype.hasContentsOfAllSources = function IndexedSourceMapConsumer_hasContentsOfAllSources() {
+    return this._sections.every(function(s) {
+      return s.consumer.hasContentsOfAllSources();
+    });
+  };
+  IndexedSourceMapConsumer.prototype.sourceContentFor = function IndexedSourceMapConsumer_sourceContentFor(aSource, nullOnMissing) {
+    for (var i = 0; i < this._sections.length; i++) {
+      var section = this._sections[i];
+      var content = section.consumer.sourceContentFor(aSource, true);
+      if (content) {
+        return content;
+      }
+    }
+    if (nullOnMissing) {
+      return null;
+    } else {
+      throw new Error('"' + aSource + '" is not in the SourceMap.');
+    }
+  };
+  IndexedSourceMapConsumer.prototype.generatedPositionFor = function IndexedSourceMapConsumer_generatedPositionFor(aArgs) {
+    for (var i = 0; i < this._sections.length; i++) {
+      var section = this._sections[i];
+      if (section.consumer._findSourceIndex(util.getArg(aArgs, "source")) === -1) {
+        continue;
+      }
+      var generatedPosition = section.consumer.generatedPositionFor(aArgs);
+      if (generatedPosition) {
+        var ret = {
+          line: generatedPosition.line + (section.generatedOffset.generatedLine - 1),
+          column: generatedPosition.column + (section.generatedOffset.generatedLine === generatedPosition.line ? section.generatedOffset.generatedColumn - 1 : 0)
+        };
+        return ret;
+      }
+    }
+    return {
+      line: null,
+      column: null
+    };
+  };
+  IndexedSourceMapConsumer.prototype._parseMappings = function IndexedSourceMapConsumer_parseMappings(aStr, aSourceRoot) {
+    this.__generatedMappings = [];
+    this.__originalMappings = [];
+    for (var i = 0; i < this._sections.length; i++) {
+      var section = this._sections[i];
+      var sectionMappings = section.consumer._generatedMappings;
+      for (var j = 0; j < sectionMappings.length; j++) {
+        var mapping = sectionMappings[j];
+        var source = section.consumer._sources.at(mapping.source);
+        source = util.computeSourceURL(section.consumer.sourceRoot, source, this._sourceMapURL);
+        this._sources.add(source);
+        source = this._sources.indexOf(source);
+        var name = null;
+        if (mapping.name) {
+          name = section.consumer._names.at(mapping.name);
+          this._names.add(name);
+          name = this._names.indexOf(name);
+        }
+        var adjustedMapping = {
+          source,
+          generatedLine: mapping.generatedLine + (section.generatedOffset.generatedLine - 1),
+          generatedColumn: mapping.generatedColumn + (section.generatedOffset.generatedLine === mapping.generatedLine ? section.generatedOffset.generatedColumn - 1 : 0),
+          originalLine: mapping.originalLine,
+          originalColumn: mapping.originalColumn,
+          name
+        };
+        this.__generatedMappings.push(adjustedMapping);
+        if (typeof adjustedMapping.originalLine === "number") {
+          this.__originalMappings.push(adjustedMapping);
+        }
+      }
+    }
+    quickSort(this.__generatedMappings, util.compareByGeneratedPositionsDeflated);
+    quickSort(this.__originalMappings, util.compareByOriginalPositions);
+  };
+  exports2.IndexedSourceMapConsumer = IndexedSourceMapConsumer;
+});
+
+// node_modules/source-map/lib/source-node.js
+var require_source_node = __commonJS((exports2) => {
+  var SourceMapGenerator = require_source_map_generator().SourceMapGenerator;
+  var util = require_util();
+  var REGEX_NEWLINE = /(\r?\n)/;
+  var NEWLINE_CODE = 10;
+  var isSourceNode = "$$$isSourceNode$$$";
+  function SourceNode(aLine, aColumn, aSource, aChunks, aName) {
+    this.children = [];
+    this.sourceContents = {};
+    this.line = aLine == null ? null : aLine;
+    this.column = aColumn == null ? null : aColumn;
+    this.source = aSource == null ? null : aSource;
+    this.name = aName == null ? null : aName;
+    this[isSourceNode] = true;
+    if (aChunks != null)
+      this.add(aChunks);
+  }
+  SourceNode.fromStringWithSourceMap = function SourceNode_fromStringWithSourceMap(aGeneratedCode, aSourceMapConsumer, aRelativePath) {
+    var node = new SourceNode();
+    var remainingLines = aGeneratedCode.split(REGEX_NEWLINE);
+    var remainingLinesIndex = 0;
+    var shiftNextLine = function() {
+      var lineContents = getNextLine();
+      var newLine = getNextLine() || "";
+      return lineContents + newLine;
+      function getNextLine() {
+        return remainingLinesIndex < remainingLines.length ? remainingLines[remainingLinesIndex++] : void 0;
+      }
+    };
+    var lastGeneratedLine = 1, lastGeneratedColumn = 0;
+    var lastMapping = null;
+    aSourceMapConsumer.eachMapping(function(mapping) {
+      if (lastMapping !== null) {
+        if (lastGeneratedLine < mapping.generatedLine) {
+          addMappingWithCode(lastMapping, shiftNextLine());
+          lastGeneratedLine++;
+          lastGeneratedColumn = 0;
+        } else {
+          var nextLine = remainingLines[remainingLinesIndex] || "";
+          var code = nextLine.substr(0, mapping.generatedColumn - lastGeneratedColumn);
+          remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn - lastGeneratedColumn);
+          lastGeneratedColumn = mapping.generatedColumn;
+          addMappingWithCode(lastMapping, code);
+          lastMapping = mapping;
+          return;
+        }
+      }
+      while (lastGeneratedLine < mapping.generatedLine) {
+        node.add(shiftNextLine());
+        lastGeneratedLine++;
+      }
+      if (lastGeneratedColumn < mapping.generatedColumn) {
+        var nextLine = remainingLines[remainingLinesIndex] || "";
+        node.add(nextLine.substr(0, mapping.generatedColumn));
+        remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn);
+        lastGeneratedColumn = mapping.generatedColumn;
+      }
+      lastMapping = mapping;
+    }, this);
+    if (remainingLinesIndex < remainingLines.length) {
+      if (lastMapping) {
+        addMappingWithCode(lastMapping, shiftNextLine());
+      }
+      node.add(remainingLines.splice(remainingLinesIndex).join(""));
+    }
+    aSourceMapConsumer.sources.forEach(function(sourceFile) {
+      var content = aSourceMapConsumer.sourceContentFor(sourceFile);
+      if (content != null) {
+        if (aRelativePath != null) {
+          sourceFile = util.join(aRelativePath, sourceFile);
+        }
+        node.setSourceContent(sourceFile, content);
+      }
+    });
+    return node;
+    function addMappingWithCode(mapping, code) {
+      if (mapping === null || mapping.source === void 0) {
+        node.add(code);
+      } else {
+        var source = aRelativePath ? util.join(aRelativePath, mapping.source) : mapping.source;
+        node.add(new SourceNode(mapping.originalLine, mapping.originalColumn, source, code, mapping.name));
+      }
+    }
+  };
+  SourceNode.prototype.add = function SourceNode_add(aChunk) {
+    if (Array.isArray(aChunk)) {
+      aChunk.forEach(function(chunk) {
+        this.add(chunk);
+      }, this);
+    } else if (aChunk[isSourceNode] || typeof aChunk === "string") {
+      if (aChunk) {
+        this.children.push(aChunk);
+      }
+    } else {
+      throw new TypeError("Expected a SourceNode, string, or an array of SourceNodes and strings. Got " + aChunk);
+    }
+    return this;
+  };
+  SourceNode.prototype.prepend = function SourceNode_prepend(aChunk) {
+    if (Array.isArray(aChunk)) {
+      for (var i = aChunk.length - 1; i >= 0; i--) {
+        this.prepend(aChunk[i]);
+      }
+    } else if (aChunk[isSourceNode] || typeof aChunk === "string") {
+      this.children.unshift(aChunk);
+    } else {
+      throw new TypeError("Expected a SourceNode, string, or an array of SourceNodes and strings. Got " + aChunk);
+    }
+    return this;
+  };
+  SourceNode.prototype.walk = function SourceNode_walk(aFn) {
+    var chunk;
+    for (var i = 0, len = this.children.length; i < len; i++) {
+      chunk = this.children[i];
+      if (chunk[isSourceNode]) {
+        chunk.walk(aFn);
+      } else {
+        if (chunk !== "") {
+          aFn(chunk, {
+            source: this.source,
+            line: this.line,
+            column: this.column,
+            name: this.name
+          });
+        }
+      }
+    }
+  };
+  SourceNode.prototype.join = function SourceNode_join(aSep) {
+    var newChildren;
+    var i;
+    var len = this.children.length;
+    if (len > 0) {
+      newChildren = [];
+      for (i = 0; i < len - 1; i++) {
+        newChildren.push(this.children[i]);
+        newChildren.push(aSep);
+      }
+      newChildren.push(this.children[i]);
+      this.children = newChildren;
+    }
+    return this;
+  };
+  SourceNode.prototype.replaceRight = function SourceNode_replaceRight(aPattern, aReplacement) {
+    var lastChild = this.children[this.children.length - 1];
+    if (lastChild[isSourceNode]) {
+      lastChild.replaceRight(aPattern, aReplacement);
+    } else if (typeof lastChild === "string") {
+      this.children[this.children.length - 1] = lastChild.replace(aPattern, aReplacement);
+    } else {
+      this.children.push("".replace(aPattern, aReplacement));
+    }
+    return this;
+  };
+  SourceNode.prototype.setSourceContent = function SourceNode_setSourceContent(aSourceFile, aSourceContent) {
+    this.sourceContents[util.toSetString(aSourceFile)] = aSourceContent;
+  };
+  SourceNode.prototype.walkSourceContents = function SourceNode_walkSourceContents(aFn) {
+    for (var i = 0, len = this.children.length; i < len; i++) {
+      if (this.children[i][isSourceNode]) {
+        this.children[i].walkSourceContents(aFn);
+      }
+    }
+    var sources = Object.keys(this.sourceContents);
+    for (var i = 0, len = sources.length; i < len; i++) {
+      aFn(util.fromSetString(sources[i]), this.sourceContents[sources[i]]);
+    }
+  };
+  SourceNode.prototype.toString = function SourceNode_toString() {
+    var str = "";
+    this.walk(function(chunk) {
+      str += chunk;
+    });
+    return str;
+  };
+  SourceNode.prototype.toStringWithSourceMap = function SourceNode_toStringWithSourceMap(aArgs) {
+    var generated = {
+      code: "",
+      line: 1,
+      column: 0
+    };
+    var map = new SourceMapGenerator(aArgs);
+    var sourceMappingActive = false;
+    var lastOriginalSource = null;
+    var lastOriginalLine = null;
+    var lastOriginalColumn = null;
+    var lastOriginalName = null;
+    this.walk(function(chunk, original) {
+      generated.code += chunk;
+      if (original.source !== null && original.line !== null && original.column !== null) {
+        if (lastOriginalSource !== original.source || lastOriginalLine !== original.line || lastOriginalColumn !== original.column || lastOriginalName !== original.name) {
+          map.addMapping({
+            source: original.source,
+            original: {
+              line: original.line,
+              column: original.column
+            },
+            generated: {
+              line: generated.line,
+              column: generated.column
+            },
+            name: original.name
+          });
+        }
+        lastOriginalSource = original.source;
+        lastOriginalLine = original.line;
+        lastOriginalColumn = original.column;
+        lastOriginalName = original.name;
+        sourceMappingActive = true;
+      } else if (sourceMappingActive) {
+        map.addMapping({
+          generated: {
+            line: generated.line,
+            column: generated.column
+          }
+        });
+        lastOriginalSource = null;
+        sourceMappingActive = false;
+      }
+      for (var idx = 0, length = chunk.length; idx < length; idx++) {
+        if (chunk.charCodeAt(idx) === NEWLINE_CODE) {
+          generated.line++;
+          generated.column = 0;
+          if (idx + 1 === length) {
+            lastOriginalSource = null;
+            sourceMappingActive = false;
+          } else if (sourceMappingActive) {
+            map.addMapping({
+              source: original.source,
+              original: {
+                line: original.line,
+                column: original.column
+              },
+              generated: {
+                line: generated.line,
+                column: generated.column
+              },
+              name: original.name
+            });
+          }
+        } else {
+          generated.column++;
+        }
+      }
+    });
+    this.walkSourceContents(function(sourceFile, sourceContent) {
+      map.setSourceContent(sourceFile, sourceContent);
+    });
+    return {code: generated.code, map};
+  };
+  exports2.SourceNode = SourceNode;
+});
+
+// node_modules/source-map/source-map.js
+var require_source_map = __commonJS((exports2) => {
+  exports2.SourceMapGenerator = require_source_map_generator().SourceMapGenerator;
+  exports2.SourceMapConsumer = require_source_map_consumer().SourceMapConsumer;
+  exports2.SourceNode = require_source_node().SourceNode;
+});
+
+// node_modules/buffer-from/index.js
+var require_buffer_from = __commonJS((exports2, module2) => {
+  var toString = Object.prototype.toString;
+  var isModern = typeof Buffer.alloc === "function" && typeof Buffer.allocUnsafe === "function" && typeof Buffer.from === "function";
+  function isArrayBuffer(input) {
+    return toString.call(input).slice(8, -1) === "ArrayBuffer";
+  }
+  function fromArrayBuffer(obj, byteOffset, length) {
+    byteOffset >>>= 0;
+    var maxLength = obj.byteLength - byteOffset;
+    if (maxLength < 0) {
+      throw new RangeError("'offset' is out of bounds");
+    }
+    if (length === void 0) {
+      length = maxLength;
+    } else {
+      length >>>= 0;
+      if (length > maxLength) {
+        throw new RangeError("'length' is out of bounds");
+      }
+    }
+    return isModern ? Buffer.from(obj.slice(byteOffset, byteOffset + length)) : new Buffer(new Uint8Array(obj.slice(byteOffset, byteOffset + length)));
+  }
+  function fromString(string, encoding) {
+    if (typeof encoding !== "string" || encoding === "") {
+      encoding = "utf8";
+    }
+    if (!Buffer.isEncoding(encoding)) {
+      throw new TypeError('"encoding" must be a valid string encoding');
+    }
+    return isModern ? Buffer.from(string, encoding) : new Buffer(string, encoding);
+  }
+  function bufferFrom(value, encodingOrOffset, length) {
+    if (typeof value === "number") {
+      throw new TypeError('"value" argument must not be a number');
+    }
+    if (isArrayBuffer(value)) {
+      return fromArrayBuffer(value, encodingOrOffset, length);
+    }
+    if (typeof value === "string") {
+      return fromString(value, encodingOrOffset);
+    }
+    return isModern ? Buffer.from(value) : new Buffer(value);
+  }
+  module2.exports = bufferFrom;
+});
+
+// node_modules/source-map-support/source-map-support.js
+var require_source_map_support = __commonJS((exports2, module2) => {
+  var SourceMapConsumer = require_source_map().SourceMapConsumer;
+  var path = require("path");
+  var fs;
+  try {
+    fs = require("fs");
+    if (!fs.existsSync || !fs.readFileSync) {
+      fs = null;
+    }
+  } catch (err) {
+  }
+  var bufferFrom = require_buffer_from();
+  function dynamicRequire(mod, request) {
+    return mod.require(request);
+  }
+  var errorFormatterInstalled = false;
+  var uncaughtShimInstalled = false;
+  var emptyCacheBetweenOperations = false;
+  var environment = "auto";
+  var fileContentsCache = {};
+  var sourceMapCache = {};
+  var reSourceMap = /^data:application\/json[^,]+base64,/;
+  var retrieveFileHandlers = [];
+  var retrieveMapHandlers = [];
+  function isInBrowser() {
+    if (environment === "browser")
+      return true;
+    if (environment === "node")
+      return false;
+    return typeof window !== "undefined" && typeof XMLHttpRequest === "function" && !(window.require && window.module && window.process && window.process.type === "renderer");
+  }
+  function hasGlobalProcessEventEmitter() {
+    return typeof process === "object" && process !== null && typeof process.on === "function";
+  }
+  function handlerExec(list) {
+    return function(arg) {
+      for (var i = 0; i < list.length; i++) {
+        var ret = list[i](arg);
+        if (ret) {
+          return ret;
+        }
+      }
+      return null;
+    };
+  }
+  var retrieveFile = handlerExec(retrieveFileHandlers);
+  retrieveFileHandlers.push(function(path2) {
+    path2 = path2.trim();
+    if (/^file:/.test(path2)) {
+      path2 = path2.replace(/file:\/\/\/(\w:)?/, function(protocol, drive) {
+        return drive ? "" : "/";
+      });
+    }
+    if (path2 in fileContentsCache) {
+      return fileContentsCache[path2];
+    }
+    var contents = "";
+    try {
+      if (!fs) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", path2, false);
+        xhr.send(null);
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          contents = xhr.responseText;
+        }
+      } else if (fs.existsSync(path2)) {
+        contents = fs.readFileSync(path2, "utf8");
+      }
+    } catch (er) {
+    }
+    return fileContentsCache[path2] = contents;
+  });
+  function supportRelativeURL(file, url) {
+    if (!file)
+      return url;
+    var dir = path.dirname(file);
+    var match = /^\w+:\/\/[^\/]*/.exec(dir);
+    var protocol = match ? match[0] : "";
+    var startPath = dir.slice(protocol.length);
+    if (protocol && /^\/\w\:/.test(startPath)) {
+      protocol += "/";
+      return protocol + path.resolve(dir.slice(protocol.length), url).replace(/\\/g, "/");
+    }
+    return protocol + path.resolve(dir.slice(protocol.length), url);
+  }
+  function retrieveSourceMapURL(source) {
+    var fileData;
+    if (isInBrowser()) {
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", source, false);
+        xhr.send(null);
+        fileData = xhr.readyState === 4 ? xhr.responseText : null;
+        var sourceMapHeader = xhr.getResponseHeader("SourceMap") || xhr.getResponseHeader("X-SourceMap");
+        if (sourceMapHeader) {
+          return sourceMapHeader;
+        }
+      } catch (e) {
+      }
+    }
+    fileData = retrieveFile(source);
+    var re = /(?:\/\/[@#][\s]*sourceMappingURL=([^\s'"]+)[\s]*$)|(?:\/\*[@#][\s]*sourceMappingURL=([^\s*'"]+)[\s]*(?:\*\/)[\s]*$)/mg;
+    var lastMatch, match;
+    while (match = re.exec(fileData))
+      lastMatch = match;
+    if (!lastMatch)
+      return null;
+    return lastMatch[1];
+  }
+  var retrieveSourceMap = handlerExec(retrieveMapHandlers);
+  retrieveMapHandlers.push(function(source) {
+    var sourceMappingURL = retrieveSourceMapURL(source);
+    if (!sourceMappingURL)
+      return null;
+    var sourceMapData;
+    if (reSourceMap.test(sourceMappingURL)) {
+      var rawData = sourceMappingURL.slice(sourceMappingURL.indexOf(",") + 1);
+      sourceMapData = bufferFrom(rawData, "base64").toString();
+      sourceMappingURL = source;
+    } else {
+      sourceMappingURL = supportRelativeURL(source, sourceMappingURL);
+      sourceMapData = retrieveFile(sourceMappingURL);
+    }
+    if (!sourceMapData) {
+      return null;
+    }
+    return {
+      url: sourceMappingURL,
+      map: sourceMapData
+    };
+  });
+  function mapSourcePosition(position) {
+    var sourceMap = sourceMapCache[position.source];
+    if (!sourceMap) {
+      var urlAndMap = retrieveSourceMap(position.source);
+      if (urlAndMap) {
+        sourceMap = sourceMapCache[position.source] = {
+          url: urlAndMap.url,
+          map: new SourceMapConsumer(urlAndMap.map)
+        };
+        if (sourceMap.map.sourcesContent) {
+          sourceMap.map.sources.forEach(function(source, i) {
+            var contents = sourceMap.map.sourcesContent[i];
+            if (contents) {
+              var url = supportRelativeURL(sourceMap.url, source);
+              fileContentsCache[url] = contents;
+            }
+          });
+        }
+      } else {
+        sourceMap = sourceMapCache[position.source] = {
+          url: null,
+          map: null
+        };
+      }
+    }
+    if (sourceMap && sourceMap.map && typeof sourceMap.map.originalPositionFor === "function") {
+      var originalPosition = sourceMap.map.originalPositionFor(position);
+      if (originalPosition.source !== null) {
+        originalPosition.source = supportRelativeURL(sourceMap.url, originalPosition.source);
+        return originalPosition;
+      }
+    }
+    return position;
+  }
+  function mapEvalOrigin(origin) {
+    var match = /^eval at ([^(]+) \((.+):(\d+):(\d+)\)$/.exec(origin);
+    if (match) {
+      var position = mapSourcePosition({
+        source: match[2],
+        line: +match[3],
+        column: match[4] - 1
+      });
+      return "eval at " + match[1] + " (" + position.source + ":" + position.line + ":" + (position.column + 1) + ")";
+    }
+    match = /^eval at ([^(]+) \((.+)\)$/.exec(origin);
+    if (match) {
+      return "eval at " + match[1] + " (" + mapEvalOrigin(match[2]) + ")";
+    }
+    return origin;
+  }
+  function CallSiteToString() {
+    var fileName;
+    var fileLocation = "";
+    if (this.isNative()) {
+      fileLocation = "native";
+    } else {
+      fileName = this.getScriptNameOrSourceURL();
+      if (!fileName && this.isEval()) {
+        fileLocation = this.getEvalOrigin();
+        fileLocation += ", ";
+      }
+      if (fileName) {
+        fileLocation += fileName;
+      } else {
+        fileLocation += "<anonymous>";
+      }
+      var lineNumber = this.getLineNumber();
+      if (lineNumber != null) {
+        fileLocation += ":" + lineNumber;
+        var columnNumber = this.getColumnNumber();
+        if (columnNumber) {
+          fileLocation += ":" + columnNumber;
+        }
+      }
+    }
+    var line = "";
+    var functionName = this.getFunctionName();
+    var addSuffix = true;
+    var isConstructor = this.isConstructor();
+    var isMethodCall = !(this.isToplevel() || isConstructor);
+    if (isMethodCall) {
+      var typeName = this.getTypeName();
+      if (typeName === "[object Object]") {
+        typeName = "null";
+      }
+      var methodName = this.getMethodName();
+      if (functionName) {
+        if (typeName && functionName.indexOf(typeName) != 0) {
+          line += typeName + ".";
+        }
+        line += functionName;
+        if (methodName && functionName.indexOf("." + methodName) != functionName.length - methodName.length - 1) {
+          line += " [as " + methodName + "]";
+        }
+      } else {
+        line += typeName + "." + (methodName || "<anonymous>");
+      }
+    } else if (isConstructor) {
+      line += "new " + (functionName || "<anonymous>");
+    } else if (functionName) {
+      line += functionName;
+    } else {
+      line += fileLocation;
+      addSuffix = false;
+    }
+    if (addSuffix) {
+      line += " (" + fileLocation + ")";
+    }
+    return line;
+  }
+  function cloneCallSite(frame) {
+    var object = {};
+    Object.getOwnPropertyNames(Object.getPrototypeOf(frame)).forEach(function(name) {
+      object[name] = /^(?:is|get)/.test(name) ? function() {
+        return frame[name].call(frame);
+      } : frame[name];
+    });
+    object.toString = CallSiteToString;
+    return object;
+  }
+  function wrapCallSite(frame, state) {
+    if (state === void 0) {
+      state = {nextPosition: null, curPosition: null};
+    }
+    if (frame.isNative()) {
+      state.curPosition = null;
+      return frame;
+    }
+    var source = frame.getFileName() || frame.getScriptNameOrSourceURL();
+    if (source) {
+      var line = frame.getLineNumber();
+      var column = frame.getColumnNumber() - 1;
+      var noHeader = /^v(10\.1[6-9]|10\.[2-9][0-9]|10\.[0-9]{3,}|1[2-9]\d*|[2-9]\d|\d{3,}|11\.11)/;
+      var headerLength = noHeader.test(process.version) ? 0 : 62;
+      if (line === 1 && column > headerLength && !isInBrowser() && !frame.isEval()) {
+        column -= headerLength;
+      }
+      var position = mapSourcePosition({
+        source,
+        line,
+        column
+      });
+      state.curPosition = position;
+      frame = cloneCallSite(frame);
+      var originalFunctionName = frame.getFunctionName;
+      frame.getFunctionName = function() {
+        if (state.nextPosition == null) {
+          return originalFunctionName();
+        }
+        return state.nextPosition.name || originalFunctionName();
+      };
+      frame.getFileName = function() {
+        return position.source;
+      };
+      frame.getLineNumber = function() {
+        return position.line;
+      };
+      frame.getColumnNumber = function() {
+        return position.column + 1;
+      };
+      frame.getScriptNameOrSourceURL = function() {
+        return position.source;
+      };
+      return frame;
+    }
+    var origin = frame.isEval() && frame.getEvalOrigin();
+    if (origin) {
+      origin = mapEvalOrigin(origin);
+      frame = cloneCallSite(frame);
+      frame.getEvalOrigin = function() {
+        return origin;
+      };
+      return frame;
+    }
+    return frame;
+  }
+  function prepareStackTrace(error, stack) {
+    if (emptyCacheBetweenOperations) {
+      fileContentsCache = {};
+      sourceMapCache = {};
+    }
+    var name = error.name || "Error";
+    var message = error.message || "";
+    var errorString = name + ": " + message;
+    var state = {nextPosition: null, curPosition: null};
+    var processedStack = [];
+    for (var i = stack.length - 1; i >= 0; i--) {
+      processedStack.push("\n    at " + wrapCallSite(stack[i], state));
+      state.nextPosition = state.curPosition;
+    }
+    state.curPosition = state.nextPosition = null;
+    return errorString + processedStack.reverse().join("");
+  }
+  function getErrorSource(error) {
+    var match = /\n    at [^(]+ \((.*):(\d+):(\d+)\)/.exec(error.stack);
+    if (match) {
+      var source = match[1];
+      var line = +match[2];
+      var column = +match[3];
+      var contents = fileContentsCache[source];
+      if (!contents && fs && fs.existsSync(source)) {
+        try {
+          contents = fs.readFileSync(source, "utf8");
+        } catch (er) {
+          contents = "";
+        }
+      }
+      if (contents) {
+        var code = contents.split(/(?:\r\n|\r|\n)/)[line - 1];
+        if (code) {
+          return source + ":" + line + "\n" + code + "\n" + new Array(column).join(" ") + "^";
+        }
+      }
+    }
+    return null;
+  }
+  function printErrorAndExit(error) {
+    var source = getErrorSource(error);
+    if (process.stderr._handle && process.stderr._handle.setBlocking) {
+      process.stderr._handle.setBlocking(true);
+    }
+    if (source) {
+      console.error();
+      console.error(source);
+    }
+    console.error(error.stack);
+    process.exit(1);
+  }
+  function shimEmitUncaughtException() {
+    var origEmit = process.emit;
+    process.emit = function(type) {
+      if (type === "uncaughtException") {
+        var hasStack = arguments[1] && arguments[1].stack;
+        var hasListeners = this.listeners(type).length > 0;
+        if (hasStack && !hasListeners) {
+          return printErrorAndExit(arguments[1]);
+        }
+      }
+      return origEmit.apply(this, arguments);
+    };
+  }
+  var originalRetrieveFileHandlers = retrieveFileHandlers.slice(0);
+  var originalRetrieveMapHandlers = retrieveMapHandlers.slice(0);
+  exports2.wrapCallSite = wrapCallSite;
+  exports2.getErrorSource = getErrorSource;
+  exports2.mapSourcePosition = mapSourcePosition;
+  exports2.retrieveSourceMap = retrieveSourceMap;
+  exports2.install = function(options) {
+    options = options || {};
+    if (options.environment) {
+      environment = options.environment;
+      if (["node", "browser", "auto"].indexOf(environment) === -1) {
+        throw new Error("environment " + environment + " was unknown. Available options are {auto, browser, node}");
+      }
+    }
+    if (options.retrieveFile) {
+      if (options.overrideRetrieveFile) {
+        retrieveFileHandlers.length = 0;
+      }
+      retrieveFileHandlers.unshift(options.retrieveFile);
+    }
+    if (options.retrieveSourceMap) {
+      if (options.overrideRetrieveSourceMap) {
+        retrieveMapHandlers.length = 0;
+      }
+      retrieveMapHandlers.unshift(options.retrieveSourceMap);
+    }
+    if (options.hookRequire && !isInBrowser()) {
+      var Module = dynamicRequire(module2, "module");
+      var $compile = Module.prototype._compile;
+      if (!$compile.__sourceMapSupport) {
+        Module.prototype._compile = function(content, filename) {
+          fileContentsCache[filename] = content;
+          sourceMapCache[filename] = void 0;
+          return $compile.call(this, content, filename);
+        };
+        Module.prototype._compile.__sourceMapSupport = true;
+      }
+    }
+    if (!emptyCacheBetweenOperations) {
+      emptyCacheBetweenOperations = "emptyCacheBetweenOperations" in options ? options.emptyCacheBetweenOperations : false;
+    }
+    if (!errorFormatterInstalled) {
+      errorFormatterInstalled = true;
+      Error.prepareStackTrace = prepareStackTrace;
+    }
+    if (!uncaughtShimInstalled) {
+      var installHandler = "handleUncaughtExceptions" in options ? options.handleUncaughtExceptions : true;
+      try {
+        var worker_threads = dynamicRequire(module2, "worker_threads");
+        if (worker_threads.isMainThread === false) {
+          installHandler = false;
+        }
+      } catch (e) {
+      }
+      if (installHandler && hasGlobalProcessEventEmitter()) {
+        uncaughtShimInstalled = true;
+        shimEmitUncaughtException();
+      }
+    }
+  };
+  exports2.resetRetrieveHandlers = function() {
+    retrieveFileHandlers.length = 0;
+    retrieveMapHandlers.length = 0;
+    retrieveFileHandlers = originalRetrieveFileHandlers.slice(0);
+    retrieveMapHandlers = originalRetrieveMapHandlers.slice(0);
+    retrieveSourceMap = handlerExec(retrieveMapHandlers);
+    retrieveFile = handlerExec(retrieveFileHandlers);
+  };
+});
+
 // node_modules/@actions/core/lib/utils.js
 var require_utils = __commonJS((exports2) => {
   "use strict";
@@ -525,7 +2690,7 @@ var require_io = __commonJS((exports2) => {
   var path = __importStar(require("path"));
   var util_1 = require("util");
   var ioUtil = __importStar(require_io_util());
-  var exec2 = util_1.promisify(childProcess.exec);
+  var exec = util_1.promisify(childProcess.exec);
   function cp(source, dest, options = {}) {
     return __awaiter(this, void 0, void 0, function* () {
       const {force, recursive} = readCopyOptions(options);
@@ -579,9 +2744,9 @@ var require_io = __commonJS((exports2) => {
       if (ioUtil.IS_WINDOWS) {
         try {
           if (yield ioUtil.isDirectory(inputPath, true)) {
-            yield exec2(`rd /s /q "${inputPath}"`);
+            yield exec(`rd /s /q "${inputPath}"`);
           } else {
-            yield exec2(`del /f /a "${inputPath}"`);
+            yield exec(`del /f /a "${inputPath}"`);
           }
         } catch (err) {
           if (err.code !== "ENOENT")
@@ -603,7 +2768,7 @@ var require_io = __commonJS((exports2) => {
           return;
         }
         if (isDir) {
-          yield exec2(`rm -rf "${inputPath}"`);
+          yield exec(`rm -rf "${inputPath}"`);
         } else {
           yield ioUtil.unlink(inputPath);
         }
@@ -727,521 +2892,6 @@ var require_io = __commonJS((exports2) => {
       }
     });
   }
-});
-
-// node_modules/@actions/exec/lib/toolrunner.js
-var require_toolrunner = __commonJS((exports2) => {
-  "use strict";
-  var __awaiter = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
-    function adopt(value) {
-      return value instanceof P ? value : new P(function(resolve2) {
-        resolve2(value);
-      });
-    }
-    return new (P || (P = Promise))(function(resolve2, reject) {
-      function fulfilled(value) {
-        try {
-          step(generator.next(value));
-        } catch (e) {
-          reject(e);
-        }
-      }
-      function rejected(value) {
-        try {
-          step(generator["throw"](value));
-        } catch (e) {
-          reject(e);
-        }
-      }
-      function step(result) {
-        result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
-      }
-      step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-  };
-  var __importStar = exports2 && exports2.__importStar || function(mod) {
-    if (mod && mod.__esModule)
-      return mod;
-    var result = {};
-    if (mod != null) {
-      for (var k in mod)
-        if (Object.hasOwnProperty.call(mod, k))
-          result[k] = mod[k];
-    }
-    result["default"] = mod;
-    return result;
-  };
-  Object.defineProperty(exports2, "__esModule", {value: true});
-  var os = __importStar(require("os"));
-  var events = __importStar(require("events"));
-  var child = __importStar(require("child_process"));
-  var path = __importStar(require("path"));
-  var io = __importStar(require_io());
-  var ioUtil = __importStar(require_io_util());
-  var IS_WINDOWS = process.platform === "win32";
-  var ToolRunner = class extends events.EventEmitter {
-    constructor(toolPath, args, options) {
-      super();
-      if (!toolPath) {
-        throw new Error("Parameter 'toolPath' cannot be null or empty.");
-      }
-      this.toolPath = toolPath;
-      this.args = args || [];
-      this.options = options || {};
-    }
-    _debug(message) {
-      if (this.options.listeners && this.options.listeners.debug) {
-        this.options.listeners.debug(message);
-      }
-    }
-    _getCommandString(options, noPrefix) {
-      const toolPath = this._getSpawnFileName();
-      const args = this._getSpawnArgs(options);
-      let cmd = noPrefix ? "" : "[command]";
-      if (IS_WINDOWS) {
-        if (this._isCmdFile()) {
-          cmd += toolPath;
-          for (const a of args) {
-            cmd += ` ${a}`;
-          }
-        } else if (options.windowsVerbatimArguments) {
-          cmd += `"${toolPath}"`;
-          for (const a of args) {
-            cmd += ` ${a}`;
-          }
-        } else {
-          cmd += this._windowsQuoteCmdArg(toolPath);
-          for (const a of args) {
-            cmd += ` ${this._windowsQuoteCmdArg(a)}`;
-          }
-        }
-      } else {
-        cmd += toolPath;
-        for (const a of args) {
-          cmd += ` ${a}`;
-        }
-      }
-      return cmd;
-    }
-    _processLineBuffer(data, strBuffer, onLine) {
-      try {
-        let s = strBuffer + data.toString();
-        let n = s.indexOf(os.EOL);
-        while (n > -1) {
-          const line = s.substring(0, n);
-          onLine(line);
-          s = s.substring(n + os.EOL.length);
-          n = s.indexOf(os.EOL);
-        }
-        strBuffer = s;
-      } catch (err) {
-        this._debug(`error processing line. Failed with error ${err}`);
-      }
-    }
-    _getSpawnFileName() {
-      if (IS_WINDOWS) {
-        if (this._isCmdFile()) {
-          return process.env["COMSPEC"] || "cmd.exe";
-        }
-      }
-      return this.toolPath;
-    }
-    _getSpawnArgs(options) {
-      if (IS_WINDOWS) {
-        if (this._isCmdFile()) {
-          let argline = `/D /S /C "${this._windowsQuoteCmdArg(this.toolPath)}`;
-          for (const a of this.args) {
-            argline += " ";
-            argline += options.windowsVerbatimArguments ? a : this._windowsQuoteCmdArg(a);
-          }
-          argline += '"';
-          return [argline];
-        }
-      }
-      return this.args;
-    }
-    _endsWith(str, end) {
-      return str.endsWith(end);
-    }
-    _isCmdFile() {
-      const upperToolPath = this.toolPath.toUpperCase();
-      return this._endsWith(upperToolPath, ".CMD") || this._endsWith(upperToolPath, ".BAT");
-    }
-    _windowsQuoteCmdArg(arg) {
-      if (!this._isCmdFile()) {
-        return this._uvQuoteCmdArg(arg);
-      }
-      if (!arg) {
-        return '""';
-      }
-      const cmdSpecialChars = [
-        " ",
-        "	",
-        "&",
-        "(",
-        ")",
-        "[",
-        "]",
-        "{",
-        "}",
-        "^",
-        "=",
-        ";",
-        "!",
-        "'",
-        "+",
-        ",",
-        "`",
-        "~",
-        "|",
-        "<",
-        ">",
-        '"'
-      ];
-      let needsQuotes = false;
-      for (const char of arg) {
-        if (cmdSpecialChars.some((x) => x === char)) {
-          needsQuotes = true;
-          break;
-        }
-      }
-      if (!needsQuotes) {
-        return arg;
-      }
-      let reverse = '"';
-      let quoteHit = true;
-      for (let i = arg.length; i > 0; i--) {
-        reverse += arg[i - 1];
-        if (quoteHit && arg[i - 1] === "\\") {
-          reverse += "\\";
-        } else if (arg[i - 1] === '"') {
-          quoteHit = true;
-          reverse += '"';
-        } else {
-          quoteHit = false;
-        }
-      }
-      reverse += '"';
-      return reverse.split("").reverse().join("");
-    }
-    _uvQuoteCmdArg(arg) {
-      if (!arg) {
-        return '""';
-      }
-      if (!arg.includes(" ") && !arg.includes("	") && !arg.includes('"')) {
-        return arg;
-      }
-      if (!arg.includes('"') && !arg.includes("\\")) {
-        return `"${arg}"`;
-      }
-      let reverse = '"';
-      let quoteHit = true;
-      for (let i = arg.length; i > 0; i--) {
-        reverse += arg[i - 1];
-        if (quoteHit && arg[i - 1] === "\\") {
-          reverse += "\\";
-        } else if (arg[i - 1] === '"') {
-          quoteHit = true;
-          reverse += "\\";
-        } else {
-          quoteHit = false;
-        }
-      }
-      reverse += '"';
-      return reverse.split("").reverse().join("");
-    }
-    _cloneExecOptions(options) {
-      options = options || {};
-      const result = {
-        cwd: options.cwd || process.cwd(),
-        env: options.env || process.env,
-        silent: options.silent || false,
-        windowsVerbatimArguments: options.windowsVerbatimArguments || false,
-        failOnStdErr: options.failOnStdErr || false,
-        ignoreReturnCode: options.ignoreReturnCode || false,
-        delay: options.delay || 1e4
-      };
-      result.outStream = options.outStream || process.stdout;
-      result.errStream = options.errStream || process.stderr;
-      return result;
-    }
-    _getSpawnOptions(options, toolPath) {
-      options = options || {};
-      const result = {};
-      result.cwd = options.cwd;
-      result.env = options.env;
-      result["windowsVerbatimArguments"] = options.windowsVerbatimArguments || this._isCmdFile();
-      if (options.windowsVerbatimArguments) {
-        result.argv0 = `"${toolPath}"`;
-      }
-      return result;
-    }
-    exec() {
-      return __awaiter(this, void 0, void 0, function* () {
-        if (!ioUtil.isRooted(this.toolPath) && (this.toolPath.includes("/") || IS_WINDOWS && this.toolPath.includes("\\"))) {
-          this.toolPath = path.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
-        }
-        this.toolPath = yield io.which(this.toolPath, true);
-        return new Promise((resolve2, reject) => {
-          this._debug(`exec tool: ${this.toolPath}`);
-          this._debug("arguments:");
-          for (const arg of this.args) {
-            this._debug(`   ${arg}`);
-          }
-          const optionsNonNull = this._cloneExecOptions(this.options);
-          if (!optionsNonNull.silent && optionsNonNull.outStream) {
-            optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os.EOL);
-          }
-          const state = new ExecState(optionsNonNull, this.toolPath);
-          state.on("debug", (message) => {
-            this._debug(message);
-          });
-          const fileName = this._getSpawnFileName();
-          const cp = child.spawn(fileName, this._getSpawnArgs(optionsNonNull), this._getSpawnOptions(this.options, fileName));
-          const stdbuffer = "";
-          if (cp.stdout) {
-            cp.stdout.on("data", (data) => {
-              if (this.options.listeners && this.options.listeners.stdout) {
-                this.options.listeners.stdout(data);
-              }
-              if (!optionsNonNull.silent && optionsNonNull.outStream) {
-                optionsNonNull.outStream.write(data);
-              }
-              this._processLineBuffer(data, stdbuffer, (line) => {
-                if (this.options.listeners && this.options.listeners.stdline) {
-                  this.options.listeners.stdline(line);
-                }
-              });
-            });
-          }
-          const errbuffer = "";
-          if (cp.stderr) {
-            cp.stderr.on("data", (data) => {
-              state.processStderr = true;
-              if (this.options.listeners && this.options.listeners.stderr) {
-                this.options.listeners.stderr(data);
-              }
-              if (!optionsNonNull.silent && optionsNonNull.errStream && optionsNonNull.outStream) {
-                const s = optionsNonNull.failOnStdErr ? optionsNonNull.errStream : optionsNonNull.outStream;
-                s.write(data);
-              }
-              this._processLineBuffer(data, errbuffer, (line) => {
-                if (this.options.listeners && this.options.listeners.errline) {
-                  this.options.listeners.errline(line);
-                }
-              });
-            });
-          }
-          cp.on("error", (err) => {
-            state.processError = err.message;
-            state.processExited = true;
-            state.processClosed = true;
-            state.CheckComplete();
-          });
-          cp.on("exit", (code) => {
-            state.processExitCode = code;
-            state.processExited = true;
-            this._debug(`Exit code ${code} received from tool '${this.toolPath}'`);
-            state.CheckComplete();
-          });
-          cp.on("close", (code) => {
-            state.processExitCode = code;
-            state.processExited = true;
-            state.processClosed = true;
-            this._debug(`STDIO streams have closed for tool '${this.toolPath}'`);
-            state.CheckComplete();
-          });
-          state.on("done", (error, exitCode) => {
-            if (stdbuffer.length > 0) {
-              this.emit("stdline", stdbuffer);
-            }
-            if (errbuffer.length > 0) {
-              this.emit("errline", errbuffer);
-            }
-            cp.removeAllListeners();
-            if (error) {
-              reject(error);
-            } else {
-              resolve2(exitCode);
-            }
-          });
-          if (this.options.input) {
-            if (!cp.stdin) {
-              throw new Error("child process missing stdin");
-            }
-            cp.stdin.end(this.options.input);
-          }
-        });
-      });
-    }
-  };
-  exports2.ToolRunner = ToolRunner;
-  function argStringToArray(argString) {
-    const args = [];
-    let inQuotes = false;
-    let escaped = false;
-    let arg = "";
-    function append(c) {
-      if (escaped && c !== '"') {
-        arg += "\\";
-      }
-      arg += c;
-      escaped = false;
-    }
-    for (let i = 0; i < argString.length; i++) {
-      const c = argString.charAt(i);
-      if (c === '"') {
-        if (!escaped) {
-          inQuotes = !inQuotes;
-        } else {
-          append(c);
-        }
-        continue;
-      }
-      if (c === "\\" && escaped) {
-        append(c);
-        continue;
-      }
-      if (c === "\\" && inQuotes) {
-        escaped = true;
-        continue;
-      }
-      if (c === " " && !inQuotes) {
-        if (arg.length > 0) {
-          args.push(arg);
-          arg = "";
-        }
-        continue;
-      }
-      append(c);
-    }
-    if (arg.length > 0) {
-      args.push(arg.trim());
-    }
-    return args;
-  }
-  exports2.argStringToArray = argStringToArray;
-  var ExecState = class extends events.EventEmitter {
-    constructor(options, toolPath) {
-      super();
-      this.processClosed = false;
-      this.processError = "";
-      this.processExitCode = 0;
-      this.processExited = false;
-      this.processStderr = false;
-      this.delay = 1e4;
-      this.done = false;
-      this.timeout = null;
-      if (!toolPath) {
-        throw new Error("toolPath must not be empty");
-      }
-      this.options = options;
-      this.toolPath = toolPath;
-      if (options.delay) {
-        this.delay = options.delay;
-      }
-    }
-    CheckComplete() {
-      if (this.done) {
-        return;
-      }
-      if (this.processClosed) {
-        this._setResult();
-      } else if (this.processExited) {
-        this.timeout = setTimeout(ExecState.HandleTimeout, this.delay, this);
-      }
-    }
-    _debug(message) {
-      this.emit("debug", message);
-    }
-    _setResult() {
-      let error;
-      if (this.processExited) {
-        if (this.processError) {
-          error = new Error(`There was an error when attempting to execute the process '${this.toolPath}'. This may indicate the process failed to start. Error: ${this.processError}`);
-        } else if (this.processExitCode !== 0 && !this.options.ignoreReturnCode) {
-          error = new Error(`The process '${this.toolPath}' failed with exit code ${this.processExitCode}`);
-        } else if (this.processStderr && this.options.failOnStdErr) {
-          error = new Error(`The process '${this.toolPath}' failed because one or more lines were written to the STDERR stream`);
-        }
-      }
-      if (this.timeout) {
-        clearTimeout(this.timeout);
-        this.timeout = null;
-      }
-      this.done = true;
-      this.emit("done", error, this.processExitCode);
-    }
-    static HandleTimeout(state) {
-      if (state.done) {
-        return;
-      }
-      if (!state.processClosed && state.processExited) {
-        const message = `The STDIO streams did not close within ${state.delay / 1e3} seconds of the exit event from process '${state.toolPath}'. This may indicate a child process inherited the STDIO streams and has not yet exited.`;
-        state._debug(message);
-      }
-      state._setResult();
-    }
-  };
-});
-
-// node_modules/@actions/exec/lib/exec.js
-var require_exec = __commonJS((exports2) => {
-  "use strict";
-  var __awaiter = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
-    function adopt(value) {
-      return value instanceof P ? value : new P(function(resolve2) {
-        resolve2(value);
-      });
-    }
-    return new (P || (P = Promise))(function(resolve2, reject) {
-      function fulfilled(value) {
-        try {
-          step(generator.next(value));
-        } catch (e) {
-          reject(e);
-        }
-      }
-      function rejected(value) {
-        try {
-          step(generator["throw"](value));
-        } catch (e) {
-          reject(e);
-        }
-      }
-      function step(result) {
-        result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
-      }
-      step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-  };
-  var __importStar = exports2 && exports2.__importStar || function(mod) {
-    if (mod && mod.__esModule)
-      return mod;
-    var result = {};
-    if (mod != null) {
-      for (var k in mod)
-        if (Object.hasOwnProperty.call(mod, k))
-          result[k] = mod[k];
-    }
-    result["default"] = mod;
-    return result;
-  };
-  Object.defineProperty(exports2, "__esModule", {value: true});
-  var tr = __importStar(require_toolrunner());
-  function exec2(commandLine, args, options) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const commandArgs = tr.argStringToArray(commandLine);
-      if (commandArgs.length === 0) {
-        throw new Error(`Parameter 'commandLine' cannot be null or empty.`);
-      }
-      const toolPath = commandArgs[0];
-      args = commandArgs.slice(1).concat(args || []);
-      const runner = new tr.ToolRunner(toolPath, args, options);
-      return runner.exec();
-    });
-  }
-  exports2.exec = exec2;
 });
 
 // node_modules/semver/semver.js
@@ -3294,6 +4944,521 @@ var require_v4 = __commonJS((exports2, module2) => {
   module2.exports = v4;
 });
 
+// node_modules/@actions/exec/lib/toolrunner.js
+var require_toolrunner = __commonJS((exports2) => {
+  "use strict";
+  var __awaiter = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
+    function adopt(value) {
+      return value instanceof P ? value : new P(function(resolve2) {
+        resolve2(value);
+      });
+    }
+    return new (P || (P = Promise))(function(resolve2, reject) {
+      function fulfilled(value) {
+        try {
+          step(generator.next(value));
+        } catch (e) {
+          reject(e);
+        }
+      }
+      function rejected(value) {
+        try {
+          step(generator["throw"](value));
+        } catch (e) {
+          reject(e);
+        }
+      }
+      function step(result) {
+        result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
+      }
+      step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+  };
+  var __importStar = exports2 && exports2.__importStar || function(mod) {
+    if (mod && mod.__esModule)
+      return mod;
+    var result = {};
+    if (mod != null) {
+      for (var k in mod)
+        if (Object.hasOwnProperty.call(mod, k))
+          result[k] = mod[k];
+    }
+    result["default"] = mod;
+    return result;
+  };
+  Object.defineProperty(exports2, "__esModule", {value: true});
+  var os = __importStar(require("os"));
+  var events = __importStar(require("events"));
+  var child = __importStar(require("child_process"));
+  var path = __importStar(require("path"));
+  var io = __importStar(require_io());
+  var ioUtil = __importStar(require_io_util());
+  var IS_WINDOWS = process.platform === "win32";
+  var ToolRunner = class extends events.EventEmitter {
+    constructor(toolPath, args, options) {
+      super();
+      if (!toolPath) {
+        throw new Error("Parameter 'toolPath' cannot be null or empty.");
+      }
+      this.toolPath = toolPath;
+      this.args = args || [];
+      this.options = options || {};
+    }
+    _debug(message) {
+      if (this.options.listeners && this.options.listeners.debug) {
+        this.options.listeners.debug(message);
+      }
+    }
+    _getCommandString(options, noPrefix) {
+      const toolPath = this._getSpawnFileName();
+      const args = this._getSpawnArgs(options);
+      let cmd = noPrefix ? "" : "[command]";
+      if (IS_WINDOWS) {
+        if (this._isCmdFile()) {
+          cmd += toolPath;
+          for (const a of args) {
+            cmd += ` ${a}`;
+          }
+        } else if (options.windowsVerbatimArguments) {
+          cmd += `"${toolPath}"`;
+          for (const a of args) {
+            cmd += ` ${a}`;
+          }
+        } else {
+          cmd += this._windowsQuoteCmdArg(toolPath);
+          for (const a of args) {
+            cmd += ` ${this._windowsQuoteCmdArg(a)}`;
+          }
+        }
+      } else {
+        cmd += toolPath;
+        for (const a of args) {
+          cmd += ` ${a}`;
+        }
+      }
+      return cmd;
+    }
+    _processLineBuffer(data, strBuffer, onLine) {
+      try {
+        let s = strBuffer + data.toString();
+        let n = s.indexOf(os.EOL);
+        while (n > -1) {
+          const line = s.substring(0, n);
+          onLine(line);
+          s = s.substring(n + os.EOL.length);
+          n = s.indexOf(os.EOL);
+        }
+        strBuffer = s;
+      } catch (err) {
+        this._debug(`error processing line. Failed with error ${err}`);
+      }
+    }
+    _getSpawnFileName() {
+      if (IS_WINDOWS) {
+        if (this._isCmdFile()) {
+          return process.env["COMSPEC"] || "cmd.exe";
+        }
+      }
+      return this.toolPath;
+    }
+    _getSpawnArgs(options) {
+      if (IS_WINDOWS) {
+        if (this._isCmdFile()) {
+          let argline = `/D /S /C "${this._windowsQuoteCmdArg(this.toolPath)}`;
+          for (const a of this.args) {
+            argline += " ";
+            argline += options.windowsVerbatimArguments ? a : this._windowsQuoteCmdArg(a);
+          }
+          argline += '"';
+          return [argline];
+        }
+      }
+      return this.args;
+    }
+    _endsWith(str, end) {
+      return str.endsWith(end);
+    }
+    _isCmdFile() {
+      const upperToolPath = this.toolPath.toUpperCase();
+      return this._endsWith(upperToolPath, ".CMD") || this._endsWith(upperToolPath, ".BAT");
+    }
+    _windowsQuoteCmdArg(arg) {
+      if (!this._isCmdFile()) {
+        return this._uvQuoteCmdArg(arg);
+      }
+      if (!arg) {
+        return '""';
+      }
+      const cmdSpecialChars = [
+        " ",
+        "	",
+        "&",
+        "(",
+        ")",
+        "[",
+        "]",
+        "{",
+        "}",
+        "^",
+        "=",
+        ";",
+        "!",
+        "'",
+        "+",
+        ",",
+        "`",
+        "~",
+        "|",
+        "<",
+        ">",
+        '"'
+      ];
+      let needsQuotes = false;
+      for (const char of arg) {
+        if (cmdSpecialChars.some((x) => x === char)) {
+          needsQuotes = true;
+          break;
+        }
+      }
+      if (!needsQuotes) {
+        return arg;
+      }
+      let reverse = '"';
+      let quoteHit = true;
+      for (let i = arg.length; i > 0; i--) {
+        reverse += arg[i - 1];
+        if (quoteHit && arg[i - 1] === "\\") {
+          reverse += "\\";
+        } else if (arg[i - 1] === '"') {
+          quoteHit = true;
+          reverse += '"';
+        } else {
+          quoteHit = false;
+        }
+      }
+      reverse += '"';
+      return reverse.split("").reverse().join("");
+    }
+    _uvQuoteCmdArg(arg) {
+      if (!arg) {
+        return '""';
+      }
+      if (!arg.includes(" ") && !arg.includes("	") && !arg.includes('"')) {
+        return arg;
+      }
+      if (!arg.includes('"') && !arg.includes("\\")) {
+        return `"${arg}"`;
+      }
+      let reverse = '"';
+      let quoteHit = true;
+      for (let i = arg.length; i > 0; i--) {
+        reverse += arg[i - 1];
+        if (quoteHit && arg[i - 1] === "\\") {
+          reverse += "\\";
+        } else if (arg[i - 1] === '"') {
+          quoteHit = true;
+          reverse += "\\";
+        } else {
+          quoteHit = false;
+        }
+      }
+      reverse += '"';
+      return reverse.split("").reverse().join("");
+    }
+    _cloneExecOptions(options) {
+      options = options || {};
+      const result = {
+        cwd: options.cwd || process.cwd(),
+        env: options.env || process.env,
+        silent: options.silent || false,
+        windowsVerbatimArguments: options.windowsVerbatimArguments || false,
+        failOnStdErr: options.failOnStdErr || false,
+        ignoreReturnCode: options.ignoreReturnCode || false,
+        delay: options.delay || 1e4
+      };
+      result.outStream = options.outStream || process.stdout;
+      result.errStream = options.errStream || process.stderr;
+      return result;
+    }
+    _getSpawnOptions(options, toolPath) {
+      options = options || {};
+      const result = {};
+      result.cwd = options.cwd;
+      result.env = options.env;
+      result["windowsVerbatimArguments"] = options.windowsVerbatimArguments || this._isCmdFile();
+      if (options.windowsVerbatimArguments) {
+        result.argv0 = `"${toolPath}"`;
+      }
+      return result;
+    }
+    exec() {
+      return __awaiter(this, void 0, void 0, function* () {
+        if (!ioUtil.isRooted(this.toolPath) && (this.toolPath.includes("/") || IS_WINDOWS && this.toolPath.includes("\\"))) {
+          this.toolPath = path.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
+        }
+        this.toolPath = yield io.which(this.toolPath, true);
+        return new Promise((resolve2, reject) => {
+          this._debug(`exec tool: ${this.toolPath}`);
+          this._debug("arguments:");
+          for (const arg of this.args) {
+            this._debug(`   ${arg}`);
+          }
+          const optionsNonNull = this._cloneExecOptions(this.options);
+          if (!optionsNonNull.silent && optionsNonNull.outStream) {
+            optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os.EOL);
+          }
+          const state = new ExecState(optionsNonNull, this.toolPath);
+          state.on("debug", (message) => {
+            this._debug(message);
+          });
+          const fileName = this._getSpawnFileName();
+          const cp = child.spawn(fileName, this._getSpawnArgs(optionsNonNull), this._getSpawnOptions(this.options, fileName));
+          const stdbuffer = "";
+          if (cp.stdout) {
+            cp.stdout.on("data", (data) => {
+              if (this.options.listeners && this.options.listeners.stdout) {
+                this.options.listeners.stdout(data);
+              }
+              if (!optionsNonNull.silent && optionsNonNull.outStream) {
+                optionsNonNull.outStream.write(data);
+              }
+              this._processLineBuffer(data, stdbuffer, (line) => {
+                if (this.options.listeners && this.options.listeners.stdline) {
+                  this.options.listeners.stdline(line);
+                }
+              });
+            });
+          }
+          const errbuffer = "";
+          if (cp.stderr) {
+            cp.stderr.on("data", (data) => {
+              state.processStderr = true;
+              if (this.options.listeners && this.options.listeners.stderr) {
+                this.options.listeners.stderr(data);
+              }
+              if (!optionsNonNull.silent && optionsNonNull.errStream && optionsNonNull.outStream) {
+                const s = optionsNonNull.failOnStdErr ? optionsNonNull.errStream : optionsNonNull.outStream;
+                s.write(data);
+              }
+              this._processLineBuffer(data, errbuffer, (line) => {
+                if (this.options.listeners && this.options.listeners.errline) {
+                  this.options.listeners.errline(line);
+                }
+              });
+            });
+          }
+          cp.on("error", (err) => {
+            state.processError = err.message;
+            state.processExited = true;
+            state.processClosed = true;
+            state.CheckComplete();
+          });
+          cp.on("exit", (code) => {
+            state.processExitCode = code;
+            state.processExited = true;
+            this._debug(`Exit code ${code} received from tool '${this.toolPath}'`);
+            state.CheckComplete();
+          });
+          cp.on("close", (code) => {
+            state.processExitCode = code;
+            state.processExited = true;
+            state.processClosed = true;
+            this._debug(`STDIO streams have closed for tool '${this.toolPath}'`);
+            state.CheckComplete();
+          });
+          state.on("done", (error, exitCode) => {
+            if (stdbuffer.length > 0) {
+              this.emit("stdline", stdbuffer);
+            }
+            if (errbuffer.length > 0) {
+              this.emit("errline", errbuffer);
+            }
+            cp.removeAllListeners();
+            if (error) {
+              reject(error);
+            } else {
+              resolve2(exitCode);
+            }
+          });
+          if (this.options.input) {
+            if (!cp.stdin) {
+              throw new Error("child process missing stdin");
+            }
+            cp.stdin.end(this.options.input);
+          }
+        });
+      });
+    }
+  };
+  exports2.ToolRunner = ToolRunner;
+  function argStringToArray(argString) {
+    const args = [];
+    let inQuotes = false;
+    let escaped = false;
+    let arg = "";
+    function append(c) {
+      if (escaped && c !== '"') {
+        arg += "\\";
+      }
+      arg += c;
+      escaped = false;
+    }
+    for (let i = 0; i < argString.length; i++) {
+      const c = argString.charAt(i);
+      if (c === '"') {
+        if (!escaped) {
+          inQuotes = !inQuotes;
+        } else {
+          append(c);
+        }
+        continue;
+      }
+      if (c === "\\" && escaped) {
+        append(c);
+        continue;
+      }
+      if (c === "\\" && inQuotes) {
+        escaped = true;
+        continue;
+      }
+      if (c === " " && !inQuotes) {
+        if (arg.length > 0) {
+          args.push(arg);
+          arg = "";
+        }
+        continue;
+      }
+      append(c);
+    }
+    if (arg.length > 0) {
+      args.push(arg.trim());
+    }
+    return args;
+  }
+  exports2.argStringToArray = argStringToArray;
+  var ExecState = class extends events.EventEmitter {
+    constructor(options, toolPath) {
+      super();
+      this.processClosed = false;
+      this.processError = "";
+      this.processExitCode = 0;
+      this.processExited = false;
+      this.processStderr = false;
+      this.delay = 1e4;
+      this.done = false;
+      this.timeout = null;
+      if (!toolPath) {
+        throw new Error("toolPath must not be empty");
+      }
+      this.options = options;
+      this.toolPath = toolPath;
+      if (options.delay) {
+        this.delay = options.delay;
+      }
+    }
+    CheckComplete() {
+      if (this.done) {
+        return;
+      }
+      if (this.processClosed) {
+        this._setResult();
+      } else if (this.processExited) {
+        this.timeout = setTimeout(ExecState.HandleTimeout, this.delay, this);
+      }
+    }
+    _debug(message) {
+      this.emit("debug", message);
+    }
+    _setResult() {
+      let error;
+      if (this.processExited) {
+        if (this.processError) {
+          error = new Error(`There was an error when attempting to execute the process '${this.toolPath}'. This may indicate the process failed to start. Error: ${this.processError}`);
+        } else if (this.processExitCode !== 0 && !this.options.ignoreReturnCode) {
+          error = new Error(`The process '${this.toolPath}' failed with exit code ${this.processExitCode}`);
+        } else if (this.processStderr && this.options.failOnStdErr) {
+          error = new Error(`The process '${this.toolPath}' failed because one or more lines were written to the STDERR stream`);
+        }
+      }
+      if (this.timeout) {
+        clearTimeout(this.timeout);
+        this.timeout = null;
+      }
+      this.done = true;
+      this.emit("done", error, this.processExitCode);
+    }
+    static HandleTimeout(state) {
+      if (state.done) {
+        return;
+      }
+      if (!state.processClosed && state.processExited) {
+        const message = `The STDIO streams did not close within ${state.delay / 1e3} seconds of the exit event from process '${state.toolPath}'. This may indicate a child process inherited the STDIO streams and has not yet exited.`;
+        state._debug(message);
+      }
+      state._setResult();
+    }
+  };
+});
+
+// node_modules/@actions/exec/lib/exec.js
+var require_exec = __commonJS((exports2) => {
+  "use strict";
+  var __awaiter = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
+    function adopt(value) {
+      return value instanceof P ? value : new P(function(resolve2) {
+        resolve2(value);
+      });
+    }
+    return new (P || (P = Promise))(function(resolve2, reject) {
+      function fulfilled(value) {
+        try {
+          step(generator.next(value));
+        } catch (e) {
+          reject(e);
+        }
+      }
+      function rejected(value) {
+        try {
+          step(generator["throw"](value));
+        } catch (e) {
+          reject(e);
+        }
+      }
+      function step(result) {
+        result.done ? resolve2(result.value) : adopt(result.value).then(fulfilled, rejected);
+      }
+      step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+  };
+  var __importStar = exports2 && exports2.__importStar || function(mod) {
+    if (mod && mod.__esModule)
+      return mod;
+    var result = {};
+    if (mod != null) {
+      for (var k in mod)
+        if (Object.hasOwnProperty.call(mod, k))
+          result[k] = mod[k];
+    }
+    result["default"] = mod;
+    return result;
+  };
+  Object.defineProperty(exports2, "__esModule", {value: true});
+  var tr = __importStar(require_toolrunner());
+  function exec(commandLine, args, options) {
+    return __awaiter(this, void 0, void 0, function* () {
+      const commandArgs = tr.argStringToArray(commandLine);
+      if (commandArgs.length === 0) {
+        throw new Error(`Parameter 'commandLine' cannot be null or empty.`);
+      }
+      const toolPath = commandArgs[0];
+      args = commandArgs.slice(1).concat(args || []);
+      const runner = new tr.ToolRunner(toolPath, args, options);
+      return runner.exec();
+    });
+  }
+  exports2.exec = exec;
+});
+
 // node_modules/@actions/tool-cache/lib/retry-helper.js
 var require_retry_helper = __commonJS((exports2) => {
   "use strict";
@@ -3880,12 +6045,15 @@ var require_tool_cache = __commonJS((exports2) => {
   }
 });
 
+// node_modules/source-map-support/register.js
+require_source_map_support().install();
+
 // src/main.ts
 var import_core3 = __toModule(require_core());
 
 // src/configure.ts
 var import_core = __toModule(require_core());
-var configure_default = () => {
+function configure() {
   const url = (0, import_core.getInput)("url");
   if (url !== "") {
     (0, import_core.exportVariable)("SENTRY_URL", url);
@@ -3903,63 +6071,69 @@ var configure_default = () => {
   if (project !== "") {
     (0, import_core.exportVariable)("SENTRY_PROJECT", project);
   }
-};
+}
 
 // src/download.ts
+var import_fs = __toModule(require("fs"));
+var import_os = __toModule(require("os"));
+var import_path = __toModule(require("path"));
 var import_core2 = __toModule(require_core());
-var import_exec = __toModule(require_exec());
 var import_io = __toModule(require_io());
 var import_tool_cache = __toModule(require_tool_cache());
-var import_fs = __toModule(require("fs"));
-var import_path = __toModule(require("path"));
-var download_default = async () => {
-  const version = (0, import_core2.getInput)("version");
-  (0, import_core2.debug)(`Detected platform: ${process.platform}`);
-  (0, import_core2.info)(`Installing sentry-cli version ${version}`);
-  let downloadLink;
-  let binDir;
-  switch (process.platform) {
-    case "linux":
-      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Linux-x86_64`;
-      binDir = (0, import_path.join)("/usr", "local", "bin");
-      break;
-    case "darwin":
-      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Darwin-x86_64`;
-      binDir = (0, import_path.join)("/usr", "local", "bin");
-      break;
-    case "win32":
-      downloadLink = `https://downloads.sentry-cdn.com/sentry-cli/${version}/sentry-cli-Windows-x86_64.exe`;
-      binDir = (0, import_path.join)("C:\\", "Program Files", "sentry-cli");
-      break;
-    default:
-      throw new Error(`Unsupported platform: ${process.platform}`);
+
+// src/get-download-link.ts
+var import_util = __toModule(require("util"));
+var URL_PREFIX = "https://downloads.sentry-cdn.com/sentry-cli/%s/sentry-cli-%s";
+var PLATFORM_MAPPINGS = {
+  "linux-x32": "Linux-i686",
+  "linux-x64": "Linux-x86_64",
+  "linux-arm": "Linux-armv7",
+  "linux-arm64": "Linux-aarch64",
+  "darwin-x64": "Darwin-x86_64",
+  "darwin-arm64": "Darwin-arm64",
+  "win32-x32": "Windows-i686",
+  "win32-x64": "Windows-x86_64"
+};
+function getDownloadLink(version) {
+  let platform = PLATFORM_MAPPINGS[`${process.platform}-${process.arch}`];
+  if (!platform && process.platform === "darwin") {
+    platform = "Darwin-universal";
   }
-  const destinationPath = (0, import_path.resolve)(binDir, "sentry-cli") + (process.platform === "win32" ? ".exe" : "");
-  (0, import_core2.debug)(`Installation directory: ${binDir}`);
+  if (!platform) {
+    throw new TypeError(`Unsupported platform: ${process.platform}/${process.arch}`);
+  }
+  const link = (0, import_util.format)(URL_PREFIX, version, platform);
+  return platform.startsWith("Windows") ? `${link}.exe` : link;
+}
+
+// src/download.ts
+async function download() {
+  const version = (0, import_core2.getInput)("version");
+  (0, import_core2.info)(`Installing sentry-cli version ${version}`);
+  (0, import_core2.debug)(`Detected platform: ${process.platform}`);
+  (0, import_core2.debug)(`Detected architecture: ${process.arch}`);
+  const downloadLink = getDownloadLink(version);
   (0, import_core2.debug)(`Downloading from: ${downloadLink}`);
   const downloadPath = await (0, import_tool_cache.downloadTool)(downloadLink);
   (0, import_core2.debug)(`Download path: ${downloadPath}`);
-  if (!(0, import_fs.existsSync)(binDir)) {
-    await (0, import_io.mkdirP)(binDir);
+  const cliDir = (0, import_path.join)((0, import_os.homedir)(), "sentry-cli");
+  const cli = (0, import_path.resolve)(cliDir, "sentry-cli") + (process.platform === "win32" ? ".exe" : "");
+  (0, import_core2.debug)(`Installation directory: ${cliDir}`);
+  if (!(0, import_fs.existsSync)(cliDir)) {
+    await (0, import_io.mkdirP)(cliDir);
   }
-  switch (process.platform) {
-    case "linux":
-    case "darwin":
-      await (0, import_exec.exec)("sudo", ["cp", downloadPath, destinationPath]);
-      await (0, import_exec.exec)("sudo", ["chmod", "+x", destinationPath]);
-      break;
-    case "win32":
-      (0, import_fs.copyFileSync)(downloadPath, destinationPath);
-      break;
+  (0, import_fs.copyFileSync)(downloadPath, cli);
+  if (process.platform === "linux" || process.platform === "darwin") {
+    (0, import_fs.chmodSync)(cli, 493);
   }
-  (0, import_core2.addPath)(binDir);
-  (0, import_core2.info)(`sentry-cli executable has been installed in ${destinationPath}`);
-};
+  (0, import_core2.addPath)(cliDir);
+  (0, import_core2.info)(`sentry-cli executable has been installed in ${cli}`);
+}
 
 // src/main.ts
 async function main() {
-  configure_default();
-  await download_default();
+  await download();
+  configure();
 }
 main().catch((e) => (0, import_core3.setFailed)(e));
 //# sourceMappingURL=index.js.map

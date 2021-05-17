@@ -1,0 +1,5 @@
+/.idea
+/.husky
+/dist
+/.*ignore
+/package-lock.json

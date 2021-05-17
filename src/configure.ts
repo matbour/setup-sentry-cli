@@ -1,6 +1,9 @@
 import { exportVariable, getInput, setSecret } from '@actions/core';
 
-export default (): void => {
+/**
+ * Configure the SENTRY_* environment variables.
+ */
+export function configure(): void {
   // Set the Sentry URL
   const url = getInput('url');
   if (url !== '') {
@@ -24,4 +27,4 @@ export default (): void => {
   if (project !== '') {
     exportVariable('SENTRY_PROJECT', project);
   }
-};
+}

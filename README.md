@@ -27,7 +27,6 @@ which is not really straight forward.
 There are also some [Docker-based actions][2.2], but they are quite slow.
 
 [2.1]: https://blog.sentry.io/2019/12/17/using-github-actions-to-create-sentry-releases
-
 [2.2]: https://github.com/marketplace?type=actions&query=sentry
 
 ## Usage
@@ -38,15 +37,28 @@ This action currently supports Ubuntu, Windows and Mac-OS based systems. The sup
 following:
 
 | Operating system | Status       |
-|------------------|--------------|
+| ---------------- | ------------ |
 | `ubuntu-latest`  | ![supported] |
 | `macos-latest`   | ![supported] |
 | `windows-latest` | ![supported] |
 
+This action also support ARM-based systems (armv7 and arm64), thanks to @paresy support.
+
+| Platform | Architecture    | Status       |
+| -------- | --------------- | ------------ |
+| linux    | x32 (i686)      | ![supported] |
+| linux    | x64 (x86_64)    | ![supported] |
+| linux    | arm (armv7)     | ![supported] |
+| linux    | arm64 (aarch64) | ![supported] |
+| darwin   | x64 (x86_64)    | ![supported] |
+| darwin   | arm64           | ![supported] |
+| win32    | x32 (i686)      | ![supported] |
+| win32    | x64 (x86_64)    | ![supported] |
+
 ### Inputs
 
 | Name           | Type                  | Default value |
-|----------------|-----------------------|---------------|
+| -------------- | --------------------- | ------------- |
 | `version`      | `'latest'` / `string` | `'latest'`    |
 | `token`        | `string`              | `''`          |
 | `url`          | `string`              | `''`          |
@@ -80,7 +92,7 @@ that you can use a Sentry token.
 If you plan to use this action to deploy releases, set the following permissions:
 
 | Name          | Access    |
-|---------------|-----------|
+| ------------- | --------- |
 | Project       | No Access |
 | Release       | Admin     |
 | Issue & Event | No Access |
@@ -105,7 +117,7 @@ Define the default project; this will export the `SENTRY_PROJECT` environment va
 ### Minimal configuration
 
 ```yaml
-- uses: mathieu-bour/setup-sentry-cli@main  # WARNING: see the latest stable version instead!
+- uses: mathieu-bour/setup-sentry-cli@main # WARNING: see the latest stable version instead!
 ```
 
 By default, this minimal example will install the latest version of the Sentry CLI, without any authentication.
@@ -114,7 +126,7 @@ By default, this minimal example will install the latest version of the Sentry C
 
 ```yaml
 - name: Setup Sentry CLI
-  uses: mathieu-bour/setup-sentry-cli@1.1.0
+  uses: mathieu-bour/setup-sentry-cli@1.2.0
   with:
     version: latest # optional if 'latest'
     url: https://sentry.yourcompany.com # optional if you are using https://sentry.io
@@ -132,18 +144,10 @@ organization `my-org`.
 You are now ready to use the Sentry CLI commands such as `sentry-cli releases`!
 
 [@mathieu-bour]: https://github.com/mathieu-bour
-
 [@mathrix-education]: https://github.com/mathrix-education
-
 [actions-secrets]: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets
-
 [license]: https://img.shields.io/github/license/mathieu-bour/setup-sentry-cli?style=flat-square
-
 [stars]: https://img.shields.io/github/stars/mathieu-bour/setup-sentry-cli?style=flat-square
-
 [latest-release]: https://img.shields.io/github/v/release/mathieu-bour/setup-sentry-cli?label=latest%20release&style=flat-square
-
 [workflow]: https://img.shields.io/github/workflow/status/mathieu-bour/setup-sentry-cli/Tests?style=flat-square
-
 [supported]: https://img.shields.io/badge/status-supported-brightgreen?style=flat-square
-

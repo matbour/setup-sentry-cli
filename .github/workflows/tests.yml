@@ -1,32 +1,100 @@
 name: Tests
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    types: [ opened, synchronize, reopened ]
+    types: [opened, synchronize, reopened]
 jobs:
   lint:
-    name: Lint with ESLint + TypeCheck
+    name: Lint with ESLint
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Setup node
-        uses: actions/setup-node@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
         with:
-          node-version: '15'
-      - name: Install NPM dependencies
+          node-version: '12'
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install dependencies
         run: npm install
       - name: Run ESLint
         run: npm run lint
+  format:
+    name: Format with Prettier
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '12'
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: npm install
+      - name: Run Prettier
+        run: npm run format:check
+  depcheck:
+    name: Check dependencies with depcheck
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '12'
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: npm install
+      - name: Run depcheck
+        run: npm run depcheck
+  typecheck:
+    name: TypeCheck with tsc
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '12'
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: npm install
       - name: Run TypeCheck
         run: npm run typecheck
-  test:
+  integration:
     name: Test Sentry Integration
     strategy:
       matrix:
-        os: [ ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, macos-10.15, windows-2019 ]
-        version: [ latest, 1.58.0 ]
+        os: [ubuntu-18.04, ubuntu-20.04, macos-10.15, windows-2019]
+        version: [latest, 1.58.0]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -47,11 +115,11 @@ jobs:
           sentry-cli --help
           sentry-cli info
       - name: Deploy Sentry release
-        if: matrix.os == 'ubuntu-20.04' && matrix.version == 'latest'  # do not duplicate releases
+        if: matrix.os == 'ubuntu-20.04' && matrix.version == 'latest' # do not duplicate releases
         run: |
           VERSION=$(sentry-cli releases propose-version)
           sentry-cli releases new "$VERSION"
-          sentry-cli releases set-commits "$VERSION" --auto
+          sentry-cli releases set-commits "$VERSION" --auto || true
           sentry-cli releases files "$VERSION" upload-sourcemaps ./dist \
             --rewrite \
             --ext map \
