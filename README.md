@@ -55,7 +55,6 @@ This action also support ARM-based systems (armv7 and arm64), thanks to @paresy 
 | win32    | x32 (i686)      | ![supported] |
 | win32    | x64 (x86_64)    | ![supported] |
 
-
 ### Inputs
 
 | Name           | Type                  | Default value |
