@@ -126,7 +126,7 @@ By default, this minimal example will install the latest version of the Sentry C
 
 ```yaml
 - name: Setup Sentry CLI
-  uses: mathieu-bour/setup-sentry-cli@1.2.0
+  uses: mathieu-bour/setup-sentry-cli@v1
   with:
     version: latest # optional if 'latest'
     url: https://sentry.yourcompany.com # optional if you are using https://sentry.io
