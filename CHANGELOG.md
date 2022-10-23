@@ -1,5 +1,9 @@
 # Changelog
 
+## [Version 1.3.0](https://github.com/mathieu-bour/setup-sentry-cli/releases/tag/1.3.0)
+
+- **feat**(github): upgrade runtime to `node16` and dependencies (fixes [#15](https://github.com/mathieu-bour/setup-sentry-cli/issues/15))
+
 ## [Version 1.2.0](https://github.com/mathieu-bour/setup-sentry-cli/releases/tag/1.2.0)
 
 - **feat**(arch): add support for ARM-based architectures (closes #11), thanks to @paresy for your support!
