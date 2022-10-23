@@ -1,11 +1,11 @@
 name: Setup Sentry CLI
 description: Setup the Sentry CLI
-author: Mathrix Education SA
+author: Mathieu Bour
 branding:
   color: orange
   icon: triangle
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'
 inputs:
   version:
