@@ -6,7 +6,7 @@
   "homepage": "https://github.com/mathieu-bour/setup-sentry-cli",
   "bugs": "https://github.com/mathieu-bour/setup-sentry-cli/issues",
   "license": "MIT",
-  "module": "dist/index.mjs",
+  "module": "dist/main.mjs",
   "author": "Mathieu Bour <mathieu@bour.tech>",
   "scripts": {
     "clean": "rimraf dist",

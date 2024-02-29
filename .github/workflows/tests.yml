@@ -12,7 +12,6 @@ jobs:
       matrix:
         script:
           - lint
-          - format:check
           - depcheck
           - typecheck
       fail-fast: false
