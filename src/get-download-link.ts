@@ -1,4 +1,4 @@
-import { format } from 'util';
+import { format } from 'node:util';
 
 const URL_PREFIX = 'https://downloads.sentry-cdn.com/sentry-cli/%s/sentry-cli-%s';
 const PLATFORM_MAPPINGS: Record<string, string> = {

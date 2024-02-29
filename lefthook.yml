@@ -1,0 +1,11 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      run: pnpm lint
+    build:
+      run: pnpm build && git add dist
+
+skip_output:
+  - meta
+  - success

@@ -1,7 +1,1 @@
-ignores:
-  # Tests
-  - '@types/jest'
-  # Workflow
-  - husky
-  - lint-staged
-  - standard-commit
+ignores: []

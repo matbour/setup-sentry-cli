@@ -1,4 +1,3 @@
-import 'source-map-support/register';
 import { setFailed } from '@actions/core';
 import { configure } from './configure';
 import { download } from './download';
