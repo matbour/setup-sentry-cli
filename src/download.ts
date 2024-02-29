@@ -1,6 +1,6 @@
-import { chmodSync, copyFileSync, existsSync } from 'fs';
-import { homedir } from 'os';
-import { join, resolve } from 'path';
+import { chmodSync, copyFileSync, existsSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { addPath, debug, getInput, info } from '@actions/core';
 import { mkdirP } from '@actions/io';
 import { downloadTool } from '@actions/tool-cache';

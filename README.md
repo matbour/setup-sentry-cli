@@ -117,7 +117,7 @@ Define the default project; this will export the `SENTRY_PROJECT` environment va
 ### Minimal configuration
 
 ```yaml
-- uses: mathieu-bour/setup-sentry-cli@main # WARNING: see the latest stable version instead!
+- uses: mathieu-bour/setup-sentry-cli@v2 # WARNING: see the latest stable version instead!
 ```
 
 By default, this minimal example will install the latest version of the Sentry CLI, without any authentication.

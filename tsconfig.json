@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
-    "module": "es2015",
-    "target": "es2019",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "target": "ES2022",
+    "moduleResolution": "NodeNext",
     "strict": true,
     "lib": ["es6"],
     "outDir": "./dist",
     "rootDir": "./src",
     "esModuleInterop": true,
     "isolatedModules": true,
-    "typeRoots": ["node_modules/@types"]
   },
   "include": ["src"]
 }
