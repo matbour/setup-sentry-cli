@@ -6,7 +6,7 @@ branding:
   icon: triangle
 runs:
   using: node20
-  main: dist/main.mjs
+  main: dist/main.js
 inputs:
   version:
     description: Sentry CLI version to use. By default, the action will use the latest one.
