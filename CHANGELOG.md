@@ -3,7 +3,7 @@
 ## [Version 2.0.0](https://github.com/mathieu-bour/setup-sentry-cli/releases/tag/v2.0.0)
 
 - **feat**(github): upgrade runtime to `node20` and dependencies (fixes [#20](https://github.com/mathieu-bour/setup-sentry-cli/issues/20))
-- 
+
 ## [Version 1.3.0](https://github.com/mathieu-bour/setup-sentry-cli/releases/tag/1.3.0)
 
 - **feat**(github): upgrade runtime to `node16` and dependencies (fixes [#15](https://github.com/mathieu-bour/setup-sentry-cli/issues/15))
