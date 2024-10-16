@@ -1,4 +1,4 @@
-# mathieu-bour/setup-sentry-cli
+# matbour/setup-sentry-cli
 
 ![License][license]
 ![Stars][stars]
@@ -9,12 +9,12 @@ Install the Sentry CLI in your GitHub Actions workflow.
 
 **This action is not supported by Sentry.**
 
-Proudly maintained by [Mathieu Bour][@mathieu-bour], former Vice-CTO [@mathrix-education][@mathrix-education].
+Proudly maintained by [Mathieu Bour][@matbour], former Vice-CTO [@mathrix-education][@mathrix-education].
 
 ## Acknowledgements
 
 This action was initially developed for [Education Media SA][@mathrix-education]. The repository is now maintained
-by [@mathieu-bour][@mathieu-bour].
+by [@matbour][@matbour].
 
 ## Motivations
 
@@ -117,7 +117,7 @@ Define the default project; this will export the `SENTRY_PROJECT` environment va
 ### Minimal configuration
 
 ```yaml
-- uses: mathieu-bour/setup-sentry-cli@v2 # WARNING: see the latest stable version instead!
+- uses: matbour/setup-sentry-cli@v2 # WARNING: see the latest stable version instead!
 ```
 
 By default, this minimal example will install the latest version of the Sentry CLI, without any authentication.
@@ -126,7 +126,7 @@ By default, this minimal example will install the latest version of the Sentry C
 
 ```yaml
 - name: Setup Sentry CLI
-  uses: mathieu-bour/setup-sentry-cli@v1
+  uses: matbour/setup-sentry-cli@v1
   with:
     version: latest # optional if 'latest'
     url: https://sentry.yourcompany.com # optional if you are using https://sentry.io
@@ -143,11 +143,11 @@ organization `my-org`.
 
 You are now ready to use the Sentry CLI commands such as `sentry-cli releases`!
 
-[@mathieu-bour]: https://github.com/mathieu-bour
+[@matbour]: https://github.com/matbour
 [@mathrix-education]: https://github.com/mathrix-education
 [actions-secrets]: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets
-[license]: https://img.shields.io/github/license/mathieu-bour/setup-sentry-cli?style=flat-square
-[stars]: https://img.shields.io/github/stars/mathieu-bour/setup-sentry-cli?style=flat-square
-[latest-release]: https://img.shields.io/github/v/release/mathieu-bour/setup-sentry-cli?label=latest%20release&style=flat-square
-[workflow]: https://img.shields.io/github/workflow/status/mathieu-bour/setup-sentry-cli/Tests?style=flat-square
+[license]: https://img.shields.io/github/license/matbour/setup-sentry-cli?style=flat-square
+[stars]: https://img.shields.io/github/stars/matbour/setup-sentry-cli?style=flat-square
+[latest-release]: https://img.shields.io/github/v/release/matbour/setup-sentry-cli?label=latest%20release&style=flat-square
+[workflow]: https://img.shields.io/github/workflow/status/matbour/setup-sentry-cli/Tests?style=flat-square
 [supported]: https://img.shields.io/badge/status-supported-brightgreen?style=flat-square
