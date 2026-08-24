@@ -21978,7 +21978,8 @@ var PLATFORM_MAPPINGS = {
   "darwin-x64": "Darwin-x86_64",
   "darwin-arm64": "Darwin-arm64",
   "win32-x32": "Windows-i686",
-  "win32-x64": "Windows-x86_64"
+  "win32-x64": "Windows-x86_64",
+  "win32-arm64": "Windows-aarch64"
 };
 function getDownloadLink(version2) {
   let platform = PLATFORM_MAPPINGS[`${process.platform}-${process.arch}`];
