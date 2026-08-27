@@ -15,7 +15,7 @@ forced onto Node.js 24 since June 2nd, 2026.
 - **test**(\*): add unit tests for the download link resolution and the environment configuration
 - **chore**(deps): upgrade `@actions/core` to v3 and `@actions/tool-cache` to v4, drop `@actions/io`
 - **chore**(biome): upgrade Biome to v2
-- **ci**(actions): refresh the runner matrix (Ubuntu 22.04/24.04, Ubuntu arm64, macOS 14/15, Windows 2022/2025, Windows arm64), add a `dist/` freshness check and Dependabot
+- **ci**(actions): refresh the runner matrix (Ubuntu 22.04/24.04 x64 and arm64, macOS 15 Intel, macOS 15/26 arm64, Windows 2022/2025, Windows 11 arm64), add a `dist/` freshness check and Dependabot
 
 ## [Version 2.0.0](https://github.com/mathieu-bour/setup-sentry-cli/releases/tag/v2.0.0)
 
