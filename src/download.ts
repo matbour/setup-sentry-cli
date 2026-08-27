@@ -1,17 +1,16 @@
-import { chmodSync, copyFileSync, existsSync } from 'node:fs';
+import { chmod, copyFile, mkdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { addPath, debug, getInput, info } from '@actions/core';
-import { mkdirP } from '@actions/io';
+import { addPath, debug, getInput, info, setOutput } from '@actions/core';
 import { downloadTool } from '@actions/tool-cache';
 import { getDownloadLink } from './get-download-link';
 
 /**
- * Download the Sentry CLI executable.
- * @returns {Promise<void>}
+ * Download the Sentry CLI executable and add it to the PATH.
+ * @returns The absolute path to the sentry-cli executable.
  */
-export async function download(): Promise<void> {
-  const version = getInput('version');
+export async function download(): Promise<string> {
+  const version = getInput('version') || 'latest';
   info(`Installing sentry-cli version ${version}`);
 
   debug(`Detected platform: ${process.platform}`);
@@ -22,22 +21,21 @@ export async function download(): Promise<void> {
   const downloadPath = await downloadTool(downloadLink);
   debug(`Download path: ${downloadPath}`);
 
-  // Create the installation directory if needed
   const cliDir = join(homedir(), 'sentry-cli');
   const cli = resolve(cliDir, 'sentry-cli') + (process.platform === 'win32' ? '.exe' : '');
   debug(`Installation directory: ${cliDir}`);
 
-  if (!existsSync(cliDir)) {
-    await mkdirP(cliDir);
-  }
-
-  copyFileSync(downloadPath, cli);
+  await mkdir(cliDir, { recursive: true });
+  await copyFile(downloadPath, cli);
 
   // On *nix, add the execute permission
-  if (process.platform === 'linux' || process.platform === 'darwin') {
-    chmodSync(cli, 0o755);
+  if (process.platform !== 'win32') {
+    await chmod(cli, 0o755);
   }
 
   addPath(cliDir);
+  setOutput('sentry-cli-path', cli);
   info(`sentry-cli executable has been installed in ${cli}`);
+
+  return cli;
 }

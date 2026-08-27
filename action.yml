@@ -1,26 +1,29 @@
 name: Setup Sentry CLI
-description: Setup the Sentry CLI
+description: Install the Sentry CLI in your GitHub Actions workflow and configure the SENTRY_* environment variables.
 author: Mathieu Bour
 branding:
   color: orange
   icon: triangle
 runs:
-  using: node20
+  using: node24
   main: dist/main.js
 inputs:
   version:
-    description: Sentry CLI version to use. By default, the action will use the latest one.
+    description: Sentry CLI version to install (e.g. `2.46.0`). Defaults to the latest release.
     required: false
     default: latest
   token:
-    description: Authentication token to use. If not provided, you will have to authenticate yourself later.
+    description: Sentry authentication token, exported as `SENTRY_AUTH_TOKEN`. If omitted, sentry-cli is left unauthenticated.
     required: false
   url:
-    description: Sentry server URL. By default, sentry-cli will use https://sentry.io.
+    description: Sentry server URL, exported as `SENTRY_URL`. Defaults to https://sentry.io.
     required: false
   organization:
-    description: Default Sentry organization.
+    description: Default Sentry organization slug, exported as `SENTRY_ORG`.
     required: false
   project:
-    description: Default Sentry project.
+    description: Default Sentry project slug, exported as `SENTRY_PROJECT`.
     required: false
+outputs:
+  sentry-cli-path:
+    description: Absolute path to the installed sentry-cli executable.

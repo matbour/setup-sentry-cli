@@ -2,10 +2,8 @@ pre-commit:
   parallel: true
   commands:
     lint:
-      run: pnpm lint
+      run: bun run lint
+    test:
+      run: bun test
     build:
-      run: pnpm build && git add dist
-
-skip_output:
-  - meta
-  - success
+      run: bun run build && git add dist
