@@ -83,12 +83,7 @@ jobs:
           VERSION=$(sentry-cli releases propose-version)
           sentry-cli releases new "$VERSION"
           sentry-cli releases set-commits "$VERSION" --auto || true
-          sentry-cli releases files "$VERSION" upload-sourcemaps ./dist \
-            --rewrite \
-            --ext map \
-            --validate \
-            --verbose \
-            --strip-common-prefix
+          sentry-cli sourcemaps upload --release "$VERSION" --strip-common-prefix ./dist
           sentry-cli releases finalize "$VERSION"
       - name: Send Sentry test event
         if: "!contains(matrix.os, 'win')"
