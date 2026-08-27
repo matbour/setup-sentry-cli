@@ -10,6 +10,7 @@ const PLATFORM_MAPPINGS: Record<string, string> = {
   'darwin-arm64': 'Darwin-arm64',
   'win32-x32': 'Windows-i686',
   'win32-x64': 'Windows-x86_64',
+  'win32-arm64': 'Windows-aarch64',
 };
 
 /**

@@ -54,6 +54,7 @@ This action also support ARM-based systems (armv7 and arm64), thanks to @paresy 
 | darwin   | arm64           | ![supported] |
 | win32    | x32 (i686)      | ![supported] |
 | win32    | x64 (x86_64)    | ![supported] |
+| win32    | arm64 (aarch64) | ![supported] |
 
 ### Inputs
 
