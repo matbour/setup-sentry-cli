@@ -1,12 +1,24 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
+import type { BunPlugin } from 'bun';
 
 /**
- * Bundle the action with Bun, then make the output reproducible.
- *
- * Bun inlines `__dirname` for CommonJS dependencies (here `@actions/tool-cache`) as the absolute path of the build
- * machine, which makes `dist/` differ between machines and leaks local paths. The value is only used by tool-cache to
- * locate a bundled 7zr.exe we do not ship, so we restore Node's runtime `__dirname` instead.
+ * Bun inlines `__dirname` in CommonJS dependencies as the absolute path of the build machine, which makes `dist/`
+ * differ between machines and leaks local paths. Only `@actions/tool-cache` uses it (to locate a bundled 7zr.exe that
+ * we do not ship anyway), so we swap it for a runtime lookup before bundling.
  */
+const portableDirname: BunPlugin = {
+  name: 'portable-dirname',
+  setup(build) {
+    build.onLoad({ filter: /node_modules\/@actions\/tool-cache\/.*\.js$/ }, async ({ path }) => {
+      let contents = await readFile(path, 'utf8');
+      if (contents.includes('__dirname')) {
+        contents = `const __runtime_dirname = require("node:path").dirname(process.argv[1] ?? "");\n${contents.replaceAll('__dirname', '__runtime_dirname')}`;
+      }
+      return { contents, loader: 'js' };
+    });
+  },
+};
+
 const result = await Bun.build({
   entrypoints: ['src/main.ts'],
   outdir: 'dist',
@@ -14,6 +26,7 @@ const result = await Bun.build({
   format: 'cjs',
   minify: true,
   sourcemap: 'linked',
+  plugins: [portableDirname],
 });
 
 if (!result.success) {
@@ -22,11 +35,6 @@ if (!result.success) {
 }
 
 const cwd = process.cwd();
-const bundlePath = 'dist/main.js';
-let bundle = await readFile(bundlePath, 'utf8');
-bundle = bundle.replaceAll(/__dirname="[^"]*\/node_modules\/[^"]*"/g, '__dirname=__dirname');
-await writeFile(bundlePath, bundle);
-
 for (const file of ['dist/main.js', 'dist/main.js.map']) {
   if ((await readFile(file, 'utf8')).includes(cwd)) {
     console.error(`${file} contains the build path ${cwd}; the bundle is not reproducible.`);
@@ -34,4 +42,4 @@ for (const file of ['dist/main.js', 'dist/main.js.map']) {
   }
 }
 
-console.log(`Built ${bundlePath} (${(bundle.length / 1024).toFixed(0)} KB)`);
+console.log(`Built dist/main.js (${((result.outputs[0]?.size ?? 0) / 1024) | 0} KB)`);
