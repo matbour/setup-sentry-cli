@@ -31,6 +31,12 @@ There are also some [Docker-based actions][2.2], but they are quite slow.
 
 ## Usage
 
+### Requirements
+
+Since v3, this action runs on the `node24` runtime. GitHub-hosted runners support it out of the box; self-hosted runners
+need [actions/runner](https://github.com/actions/runner) 2.327.1 or newer. If you cannot upgrade your runners yet, stay
+on `matbour/setup-sentry-cli@v2` (`node20`), which is no longer maintained.
+
 ### Supported operating systems
 
 This action currently supports Ubuntu, Windows and Mac-OS based systems. The supported operating system matrix is the
@@ -42,7 +48,7 @@ following:
 | `macos-latest`   | ![supported] |
 | `windows-latest` | ![supported] |
 
-This action also support ARM-based systems (armv7 and arm64), thanks to @paresy support.
+This action also supports ARM-based systems (armv7 and arm64), thanks to @paresy and @advait-m.
 
 | Platform | Architecture    | Status       |
 | -------- | --------------- | ------------ |
@@ -68,6 +74,12 @@ This action also support ARM-based systems (armv7 and arm64), thanks to @paresy 
 
 See [action.yml](action.yml) for details.
 
+### Outputs
+
+| Name              | Description                                          |
+| ----------------- | ---------------------------------------------------- |
+| `sentry-cli-path` | Absolute path to the installed sentry-cli executable |
+
 #### `version`
 
 If you need a precise version of the Sentry CLI, you may provide this input. We strongly advise you to do so since using
@@ -84,26 +96,16 @@ which is
 This is the token which will be used by the Sentry CLI to authenticate against the Sentry server. Actually, this will
 export the `SENTRY_AUTH_TOKEN` environment variable, so the sentry-cli already can log into the server.
 
-##### Organization Internal Integration (recommended)
+##### Organization auth token (recommended)
 
-This will generate a token that is tied to your organization. Go to Organization Settings > Developer Settings > + New
-Internal Integration. Fill the `Name` with a name of your choice (for example `GitHub Actions`); you will get a token
-that you can use a Sentry token.
-
-If you plan to use this action to deploy releases, set the following permissions:
-
-| Name          | Access    |
-| ------------- | --------- |
-| Project       | No Access |
-| Release       | Admin     |
-| Issue & Event | No Access |
-| Organization  | Read      |
-| Member        | No Access |
+Sentry recommends [organization auth tokens](https://docs.sentry.io/account/auth-tokens/#organization-auth-tokens) for
+CI: they are tied to your organization rather than a user, and are scoped to exactly what is needed to upload source
+maps and manage releases. Go to Organization Settings > Auth Tokens > Create New Token, then store it in a GitHub secret.
 
 ##### Personal token
 
-You can also create personal access token that are tied to your account and use them to impersonate your account. Simply
-go to Settings > API Keys > Create Next Token.
+You can also create a [user auth token](https://docs.sentry.io/account/auth-tokens/#user-auth-tokens) tied to your
+account: Settings > Auth Tokens > Create New Token. Prefer organization tokens for anything shared or long-lived.
 
 #### `organization`
 
@@ -118,7 +120,7 @@ Define the default project; this will export the `SENTRY_PROJECT` environment va
 ### Minimal configuration
 
 ```yaml
-- uses: matbour/setup-sentry-cli@v2 # WARNING: see the latest stable version instead!
+- uses: matbour/setup-sentry-cli@v3
 ```
 
 By default, this minimal example will install the latest version of the Sentry CLI, without any authentication.
@@ -127,11 +129,11 @@ By default, this minimal example will install the latest version of the Sentry C
 
 ```yaml
 - name: Setup Sentry CLI
-  uses: matbour/setup-sentry-cli@v1
+  uses: matbour/setup-sentry-cli@v3
   with:
-    version: latest # optional if 'latest'
+    version: 2.46.0 # optional, defaults to 'latest'
     url: https://sentry.yourcompany.com # optional if you are using https://sentry.io
-    token: ${{ SECRETS.SENTRY_TOKEN }} # from GitHub secrets
+    token: ${{ secrets.SENTRY_TOKEN }} # from GitHub secrets
     organization: my-org
     project: my-project
 ```
@@ -144,11 +146,38 @@ organization `my-org`.
 
 You are now ready to use the Sentry CLI commands such as `sentry-cli releases`!
 
+### Using the output
+
+```yaml
+- name: Setup Sentry CLI
+  id: sentry
+  uses: matbour/setup-sentry-cli@v3
+- run: echo "sentry-cli installed at ${{ steps.sentry.outputs.sentry-cli-path }}"
+```
+
+## Migrating from v2
+
+- The runtime moved from `node20` to `node24`; make sure your self-hosted runners are up to date.
+- Inputs are unchanged. A new `sentry-cli-path` output is available.
+- Windows arm64 is now supported.
+
+## Development
+
+This repository uses [Bun](https://bun.sh):
+
+```sh
+bun install
+bun test
+bun run lint
+bun run typecheck
+bun run build # regenerates dist/, which is committed
+```
+
 [@matbour]: https://github.com/matbour
 [@mathrix-education]: https://github.com/mathrix-education
 [actions-secrets]: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets
 [license]: https://img.shields.io/github/license/matbour/setup-sentry-cli?style=flat-square
 [stars]: https://img.shields.io/github/stars/matbour/setup-sentry-cli?style=flat-square
 [latest-release]: https://img.shields.io/github/v/release/matbour/setup-sentry-cli?label=latest%20release&style=flat-square
-[workflow]: https://img.shields.io/github/workflow/status/matbour/setup-sentry-cli/Tests?style=flat-square
+[workflow]: https://img.shields.io/github/actions/workflow/status/matbour/setup-sentry-cli/tests.yml?branch=main&style=flat-square
 [supported]: https://img.shields.io/badge/status-supported-brightgreen?style=flat-square

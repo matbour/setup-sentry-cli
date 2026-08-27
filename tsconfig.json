@@ -1,14 +1,16 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
-    "target": "ES2022",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "types": ["node", "bun"],
     "strict": true,
-    "lib": ["es6"],
-    "outDir": "./dist",
-    "rootDir": "./src",
+    "noEmit": true,
     "esModuleInterop": true,
     "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true
   },
   "include": ["src"]
 }

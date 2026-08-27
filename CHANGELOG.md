@@ -1,5 +1,22 @@
 # Changelog
 
+## [Version 3.0.0](https://github.com/matbour/setup-sentry-cli/releases/tag/v3.0.0)
+
+**Breaking:** the action now runs on the `node24` runtime. It requires GitHub-hosted runners or a self-hosted
+[actions/runner](https://github.com/actions/runner) >= 2.327.1. Node.js 20 actions are deprecated by GitHub and are
+forced onto Node.js 24 since June 2nd, 2026.
+
+- **feat**(github): upgrade runtime to `node24` (fixes [#23](https://github.com/matbour/setup-sentry-cli/issues/23))
+- **feat**(arch): add support for Windows arm64 ([#24](https://github.com/matbour/setup-sentry-cli/pull/24)), thanks to @advait-m!
+- **feat**(outputs): expose the installed executable path as the `sentry-cli-path` output
+- **fix**(arch): 32-bit Linux and Windows mappings never matched (Node.js reports `ia32`, not `x32`)
+- **fix**(secrets): mask the token before exporting `SENTRY_AUTH_TOKEN`
+- **build**(\*): use [Bun](https://bun.sh) for dependency management, bundling and testing (replaces pnpm and tsup)
+- **test**(\*): add unit tests for the download link resolution and the environment configuration
+- **chore**(deps): upgrade `@actions/core` to v3 and `@actions/tool-cache` to v4, drop `@actions/io`
+- **chore**(biome): upgrade Biome to v2
+- **ci**(actions): refresh the runner matrix (Ubuntu 22.04/24.04, Ubuntu arm64, macOS 14/15, Windows 2022/2025, Windows arm64), add a `dist/` freshness check and Dependabot
+
 ## [Version 2.0.0](https://github.com/mathieu-bour/setup-sentry-cli/releases/tag/v2.0.0)
 
 - **feat**(github): upgrade runtime to `node20` and dependencies (fixes [#20](https://github.com/mathieu-bour/setup-sentry-cli/issues/20))
