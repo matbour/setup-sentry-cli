@@ -34,9 +34,9 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.10",
     "@types/bun": "^1.4.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.4.0",
     "lefthook": "^2.1.10",
-    "typescript": "^5.9.0"
+    "typescript": "^7.0.2"
   },
   "os": [
     "linux",
